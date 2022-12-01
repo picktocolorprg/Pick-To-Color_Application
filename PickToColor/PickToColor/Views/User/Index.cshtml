@@ -1,0 +1,317 @@
+﻿@using PickToColor.Utility;
+
+@{
+    ViewBag.Title = "Manage Users | Pick To Color System | Central Logistics Pte. Ltd.";
+}
+
+<h2>Manage Users</h2>
+<hr />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">Add New User</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divCreateUser');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divCreateUser">
+        <div class="row">
+            <div class="col-md-6 col-12">
+                <div class="row mb-3">
+                    <div class="col-md-5 col-12">
+                        <span class="control-label col-md-2">Username <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                    </div>
+                    <div class="col-md-7 col-12">
+                        <input type="text" id="txtUserName" class="form-control required" data-message="Username is required" maxlength="50" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 col-12">
+                        <span class="control-label col-md-2">Password <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                    </div>
+                    <div class="col-md-7 col-12">
+                        <input type="password" id="Password" class="form-control required" data-message="Password is required" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 col-12">
+                        <span class="control-label col-md-2">Confirm Password <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                    </div>
+                    <div class="col-md-7 col-12">
+                        <input type="password" id="txtPasswordConfirm" class="form-control required" data-message="Please re-enter password" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 col-12">
+                        <span class="control-label col-md-2">Name <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                    </div>
+                    <div class="col-md-7 col-12">
+                        <input type="tel" id="txtName" class="form-control required" data-message="Name is required" maxlength="100" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-12">
+                <div class="row mb-3">
+                    <div class="col-md-5 col-12 mb-3">
+                        <span class="control-label col-md-2">Picture<br /></span><span class="pl-3"><sub>200 x 200 pixels recommended</sub></span>
+                    </div>
+                    <div class="col-md-7 col-12 text-left text-md-center">
+                        <i class="fas fa-user-circle fa-8x text-light border wh-200 img-fluid" id="iUser"></i>
+                        <img class="d-none border px-1 py-1" id="imgUser" width="200" height="200" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 col-12 text-left">
+
+                    </div>
+                    <div class="col-md-7 col-12 text-left text-md-center">
+                        <a class="btn-primary btn btn-sm text-light" id="btnSelectUserImage" onclick="ShowUploadDialog();">Select Image</a>&nbsp;
+                        <a class="btn-danger btn btn-sm text-light d-none" id="btnRemoveUserImage" onclick="RemoveImage();">Remove</a>
+                        <input type="file" id="fuUserImage" name="UserImage" class="d-none" accept="image/*" onchange="FileSelected();" />
+                        <input type="hidden" name="ImagePath" id="ImagePath" value="" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h5>Roles:</h5>
+        <hr />
+        <div class="row mb-3">
+            <div class="col-md-4 col-lg-3 col-9">Administrator/PTC Manager</div>
+            <div class="col-md-1 col-lg-3 col-3"><input type="checkbox" id="chkManager" class="wh-20" /></div>
+            <br class="hidden-sm-up" />
+            <br class="hidden-sm-up" />
+            <div class="col-md-4 col-lg-3 col-9">Operator</div>
+            <div class="col-md-1 col-lg-3 col-3"><input type="checkbox" id="chkOperator" class="wh-20" disabled="disabled" checked="checked" /></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-offset-2 col-12 text-center">
+                <button type="button" class="btn btn-primary" onclick="ValidateFields();">
+                    <i class="fas fa-plus-square"></i>&nbsp;Add
+                </button>
+                &nbsp;
+                <a onclick="ClearForm()" class="btn btn-danger text-light"><i class="fas fa-eraser"></i> Clear</a>
+            </div>
+        </div>
+        <div class="row row-mb-minus10">
+            <div class="col-12">
+                <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">Select Users to Edit</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divSelectUsers');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divSelectUsers">
+        <div class="table-responsive" id="tblUsers">
+            @{
+                Html.RenderAction("GetAllUsers", "User");
+            }
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    function ValidateFields() {
+        if (ValidateRequired()) {
+            var IsValid = true;
+            var usernameRegex = /^[a-z0-9]+$/i;
+            if (!usernameRegex.test($('#UserName').val())) {
+                removeError($('#UserName'));
+                ShowError($('#UserName'), 'The username should only contain alphanumeric characters without space.');
+                IsValid = false;
+            }
+
+            if ($('#Password').val() != $('#txtPasswordConfirm').val()) {
+                removeError($('#txtPasswordConfirm'));
+                ShowError($('#txtPasswordConfirm'), 'The passwords do not match. Please check and try again.');
+                IsValid = false;
+            }
+
+            if (IsValid) {
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("Create","User")',
+                    data: {
+                        NewUser:
+                            {
+                                UserName: $('#txtUserName').val(),
+                                Password: $('#Password').val(),
+                                Name: $('#txtName').val(),
+                                ImagePath: $('#ImagePath').val(),
+                                IsManager: $('#chkManager').prop('checked')
+                            }
+                    },
+                    success: function (result) {
+                        ClearForm();
+                        ShowModalDialog('User Account is added successfully!', 'Successful Creation');
+                        $('#tblUsers').load('@Url.Action("GetAllUsers", "User")');
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        ShowModalDialog(xhr.responseText, 'Creation failed');
+                    }
+                });
+            }
+
+        }
+
+    }
+
+    function LoadPage(pagenumber) {
+        ShowLoading();
+        $('#tblUsers').load('@Url.Action("GetAllUsers", "User")', { pageno: pagenumber }, function () {
+            HideLoading();
+        });
+    }
+
+    function ShowUploadDialog() {
+        $('#fuUserImage').trigger('click');
+    }
+
+    function FileSelected() {
+        if ($('#fuUserImage').val() != '') {
+
+            if (!($('#fuUserImage').val().endsWith('.png') || $('#fuUserImage').val().endsWith('.jpg') || $('#fuUserImage').val().endsWith('.jpeg'))) {
+                ShowModalDialog('Please upload .jpg or .png files only.', 'Image Upload failed');
+                return;
+            }
+
+            var myFormData = new FormData();
+            myFormData.append('UserImage', $('#fuUserImage')[0].files[0]);
+            myFormData.append('ForCurrentUser', false);
+            $.ajax({
+                url: '@Url.Action("UploadImage", "User")',
+                type: 'POST',
+                processData: false, // important
+                contentType: false, // important
+                dataType: 'json',
+                data: myFormData,
+                success: function (result) {
+                    $('#iUser').hide();
+                    $('#ImagePath').val(result);
+                    $('#imgUser').attr('src', result).removeClass('d-none');
+                    $('#btnRemoveUserImage').removeClass('d-none');
+                },
+                error: function (msg) {
+                    ShowModalDialog(msg, 'Image Upload failed');
+                }
+
+            });
+        }
+    }
+
+    function ClearForm() {
+        $('#iUser').show();
+        $('#ImagePath').val('');
+        $('#imgUser').addClass('d-none');
+        $('#btnRemoveUserImage').addClass('d-none');
+        $('#txtName').val('');
+        $('#txtPasswordConfirm').val('');
+        $('#Password').val('');
+        $('#txtUserName').val('');
+        $('#chkManager').prop('checked', false);
+    }
+
+    function RemoveImage() {
+        var ImagePath = $('#ImagePath').val();
+        if (ImagePath != '') {
+            $.ajax({
+                url: '@Url.Action("DeleteImage", "User")',
+                type: 'POST',
+                data: { 'ImagePath': ImagePath, ForCurrentUser: false },
+                success: function (result) {
+                    $('#iUser').show();
+                    $('#ImagePath').val('');
+                    $('#imgUser').attr('src', '').addClass('d-none');
+                    $('#btnRemoveUserImage').addClass('d-none');
+                },
+                error: function (msg) {
+                    $('#iUser').show();
+                    $('#ImagePath').val('');
+                    $('#btnRemoveUserImage').addClass('d-none');
+                }
+            });
+        }
+    }
+
+    function ConfirmDelete() {
+        if ($('#tblUsers').find('tr:not(:has(th)) td :checkbox:checked').length == 0) {
+            ShowModalDialog('Please select a user to delete', 'Information');
+            return;
+        }
+
+        var ItemsToDelete = new Array();
+        $('#tblUsers').find('tr:not(:has(th)) td :checkbox:checked').each(function () {
+            ItemsToDelete.push($(this).data('id'));
+        });
+
+
+        bootbox.confirm("Are you sure want to delete the selected User Account(s)?", function (result) {
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("Delete","User")',
+                    type: 'POST',
+                    // you can send some additional data along with the request
+                    data: { UserIDs: ItemsToDelete },
+                    //dataType: 'json',
+                    success: function (result) {
+                        $('#tblUsers').load('@Url.Action("GetAllUsers", "User")');
+                        ShowModalDialog('The selected user account is removed successfully', 'Successful Delete');
+                    },
+                    error: function (errormessage) {
+                        ShowModalDialog('The delete operation has failed. Please try again later after some time.', 'Delete failed!');
+                    }
+                });
+            }
+        });
+    }
+
+    function OnEdit(userId, username, name, isManager) {
+        $('#divEditUser').modal('show');
+        ClearUpdateForm();
+        $('#txtUpdateUsername').data('id', userId);
+        $('#txtUpdateUsername').val(username);
+        $('#txtUpdateName').val(name);
+        $('#chkUpdateManagerRole').prop('checked', isManager);
+    }
+    function UpdateUser() {
+        var IsUpdateValid = true;
+        if ($.trim($('#txtUpdateUsername').val()) == '') {
+            ShowError($('#txtUpdateUsername'), 'Please enter the username');
+            IsUpdateValid = false;
+        }
+        if ($.trim($('#txtUpdateName').val()) == '') {
+            ShowError($('#txtUpdateName'), 'Please enter the name');
+            IsUpdateValid = false;
+        }
+
+        if (!IsUpdateValid) return false;
+
+        $.ajax({
+            url: '@Url.Action("Edit","User")',
+            type: 'POST',
+            data: { UserID: $('#txtUpdateUsername').data('id'), Username: $.trim($('#txtUpdateUsername').val()), Name: $.trim($('#txtUpdateName').val()), IsManager: $('#chkUpdateManagerRole').prop('checked') },
+            success: function (result) {
+                $('#tblUsers').load('@Url.Action("GetAllUsers", "User")');
+                ShowModalDialog('The User account is updated successfully', 'Successful Update');
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                ShowModalDialog(xhr.responseText, 'Update failed');
+            }
+        });
+        $('#divEditUser').modal('hide');
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    }
+
+
+    function ClearUpdateForm() {
+        $('#txtUpdateUsername').val('');
+        $('#txtUpdateName').val('');
+        $('#chkUpdateManagerRole').prop('checked', false);
+        $('#txtUpdateUsername').data('id', '');
+    }
+</script>

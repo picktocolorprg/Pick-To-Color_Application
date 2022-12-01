@@ -1,0 +1,89 @@
+﻿@model PagedList.IPagedList<PickToColor.Models.ProductModel>
+@using PagedList.Mvc;
+@using PickToColor.Models;
+@{
+    List<LocationModel> Locations = null;
+    PickToColor.EntityFramework.DataContext context = new PickToColor.EntityFramework.DataContext();
+    Locations = context.Locations.Where(a => a.IsActive).ToList();
+    Locations = Locations ?? new List<LocationModel>();
+}
+
+<table class="table table-bordered" id="tblProducts">
+    <tr class="thead-dark text-light text-center">
+        <th class="text-center"><input type="checkbox" id="chkHeader" class="wh-20" onclick="ToggleCheckBoxes(this);" /></th>
+        <th>Barcode</th>
+        <th>SKU</th>
+        <th>Description</th>
+        <th>Associated Picking Qty</th>
+        <th hidden>Check S/N</th>
+        <th>Cubic Metres</th>
+        <th>Location</th>
+        <th>Action</th>
+    </tr>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+<tr>
+    <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='@item.ProductID' onclick="ToggleHeaderCheckBox(this);" /></td>
+    <td class="text-left">@item.Barcode</td>
+    <td class="text-left">@item.SKU</td>
+    <td class="text-left">@item.Description</td>
+    <td class="text-right">@item.AssociatedPickingQty.ToString()</td>
+    <td class="text-center" hidden>
+        @if (item.CheckSN)
+        {
+            <input type="checkbox" id="chkCheckSN" checked="checked" disabled="disabled" />
+        }
+        else
+        {
+            <input type="checkbox" id="chkCheckSN" disabled="disabled" />
+        }
+    </td>
+    <td class="text-right">@item.CBM.ToString()</td>
+    <td class="text-center">@Locations.FirstOrDefault(a => a.LocationMasterID == item.LocationMasterID).LocationID</td>
+    <td class="text-center">
+        <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0"
+           onclick="OnEdit(@item.ProductID,@item.CBM.ToString(), @item.CheckSN.ToString().ToLower(),@item.AssociatedPickingQty.ToString(), '@HttpUtility.JavaScriptStringEncode(item.Description)', '@HttpUtility.JavaScriptStringEncode(item.SKU)', '@HttpUtility.JavaScriptStringEncode(item.Barcode)', @item.CustomerID,@item.LocationMasterID)">
+            <i class="fas fa-pencil-alt"></i> Edit
+        </a>
+    </td>
+</tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9">
+                                <div class="alert alert-dark text-muted text-center">No records. Please search by selecting a customer or different parameter.</div>
+                            </td>
+                        </tr>
+                    }
+
+    @if (Model.PageCount > 0)
+    {
+        <tr>
+            <td colspan="9">
+                <div class="float-left">
+                    <nav>
+                        @Html.PagedListPager(Model, page => string.Format("javascript:LoadPage({0})", page),
+                        new PagedListRenderOptions()
+                        {
+                            UlElementClasses = new List<string> { "pagination", "pagination-sm", "mb-3", "mb-sm-0" },
+                            LiElementClasses = new List<string> { "page-item" },
+                            FunctionToTransformEachPageLink = (li, a) =>
+                            {
+                                a.AddCssClass("page-link");
+                                li.InnerHtml = a.ToString();
+                                return li;
+                            }
+                        })
+                    </nav>
+                </div>
+                <div class="float-right">
+                    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+                </div>
+            </td>
+        </tr>
+    }
+</table>

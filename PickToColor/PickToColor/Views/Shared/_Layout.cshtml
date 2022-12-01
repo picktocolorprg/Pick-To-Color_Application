@@ -1,0 +1,61 @@
+﻿@using System.Web.Optimization;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE;IE=9;chrome=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="~/Images/favicon.ico" />
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/bundles/sitecss")
+    @Styles.Render("~/bundles/commoncss")
+    @Scripts.Render("~/bundles/modernizer")
+    @Scripts.Render("~/bundles/fontawesome")
+    @Scripts.Render("~/bundles/commonjs")
+    @RenderSection("PickColorDependency", required: false)
+</head>
+<body>
+    @Html.Partial("_Menu")
+    <div class="container body-content">
+        <br />
+        @RenderBody()
+        <hr class="mx-2 my-2" />
+        <footer class="text-center">
+            <p>&copy; @DateTime.Now.Year - Pick To Color System - Central Logistics Pte. Ltd. </p>
+        </footer>
+        @Html.Partial("_ModalPopup")
+        @Html.Partial("_Loading")
+    </div>
+    @*jQuery 3.3 ensWith issue workaround for ie*@
+    <script>
+        if (!String.prototype.endsWith) {
+            String.prototype.endsWith = function (searchString, position) {
+                var subjectString = this.toString();
+                if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                    position = subjectString.length;
+                }
+                position -= searchString.length;
+                var lastIndex = subjectString.indexOf(searchString, position);
+                return lastIndex !== -1 && lastIndex === position;
+            };
+        }
+    </script>
+
+    @Scripts.Render("~/bundles/bootbox")
+    @RenderSection("PickColorJS",required:false)
+    <script>
+        $(document).ready(function () {
+
+            $('ul.navbar-nav a[href!="#"]').each(function () {
+                if (location.href.endsWith($(this).attr('href'))) {
+                    $(this).parents('li').children('a.nav-link').addClass('active');
+                }
+            });
+            $('nav.navbar').find('a.nav-link,a.dropdown-item').not('.nav-link.dropdown-toggle').not('[href!="#"]').click(function (e) {
+                ShowLoading();
+            });
+        });
+    </script>
+    @RenderSection("ExecutableScripts", required: false)
+</body>
+</html>

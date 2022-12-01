@@ -1,0 +1,127 @@
+﻿@model PagedList.IPagedList<PickToColor.Models.StationModel>
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Select Station | Pick to Color System | Central Logistics Pte. Ltd.";
+}
+<script>
+    var returl = '';
+</script>
+@section ExecutableScripts{
+
+    @if (Request.QueryString["sel"] != null && Request.QueryString["sel"] == "none")
+    {
+        <script>
+            ShowInfoAlertOnScreen('#divMessage', 'Please select the station you are going to work before performing other operation', 'Station not selected!', 'alert-warning');
+        </script>
+    }
+    @if (Request.QueryString["returl"] != null && !string.IsNullOrEmpty(Request.QueryString["returl"]))
+    {
+        <script>
+            returl = '@HttpUtility.UrlDecode(Request.QueryString["returl"])';
+        </script>
+    }
+    <script>
+        $(document).ready(function () {
+            $('#list-tab-stations a').dblclick(function () {
+                SelectStation();
+            });
+        });
+    </script>
+
+}
+
+
+<h2>Select Work Station</h2>
+
+<hr />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">Select your work station</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divWorkStation');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divWorkStation">
+        <div class="row">
+            <div class="col-12" id="divMessage"></div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-md-6 offset-md-3">
+
+                @if (Model != null && Model.Any())
+                {
+                    <div class="list-group mb-3" id="list-tab-stations" role="tablist">
+                        @foreach (var item in Model)
+                        {
+                            <a class="list-group-item set-height list-group-item-action" id="list-home-list" data-toggle="list" href="#" role="tab" data-stationid='@item.StationID.ToString()' title='@item.StationName'>@item.StationName</a>
+                        }
+                    </div>
+                    if (Model.PageCount > 0)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6 text-md-left text-center">
+                                <nav>
+                                    @Html.PagedListPager(Model, page => string.Format("{0}", Url.Action("SelectStation", "Station", new { @pageno = page })),
+                        new PagedListRenderOptions()
+                        {
+                            UlElementClasses = new List<string> { "pagination", "pagination-sm", "mb-3", "mb-sm-0" },
+                            LiElementClasses = new List<string> { "page-item" },
+                            FunctionToTransformEachPageLink = (li, a) =>
+                            {
+                                a.AddCssClass("page-link");
+                                li.InnerHtml = a.ToString();
+                                return li;
+                            }
+                        })
+                                </nav>
+                            </div>
+                            <div class="col-12 col-md-6 text-md-right text-center">
+                                Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+                            </div>
+                        </div>
+                    }
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <a class="btn btn-primary btn-lg text-light" onclick="SelectStation();">Confirm</a>
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <div class="alert alert-secondary">No Station records found yet. Contact the Administrator to create station records.</div>
+                }
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<br />
+<script>
+    function SelectStation() {
+        if ($('#list-tab-stations a.active').length == 0) {
+            ShowInfoAlertOnScreen('#divMessage', 'Please select any station before clicking on confirm button', 'Error', 'alert-danger');
+        }
+        else {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("SelectStation","Station")',
+                data: { StationID: $('#list-tab-stations a.active').data('stationid') },
+                success: function (result) {
+                    if (result) {
+                        if (returl != '') {
+                            window.location.href = returl;
+                        }
+                        else {
+                            window.location.href = '@Url.Action("Index","Home")';
+                        }
+                    }
+                    else {
+                        ShowModalDialog('Could not able to select station at the moment. Please try after some time.', 'Station Selection failed.');
+                    }
+                }
+            });
+        }
+    }
+
+
+</script>

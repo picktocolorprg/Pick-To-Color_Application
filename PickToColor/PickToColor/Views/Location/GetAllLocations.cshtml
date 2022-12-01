@@ -1,0 +1,221 @@
+﻿@model PagedList.IPagedList<PickToColor.Models.LocationModel>
+@using PagedList.Mvc;
+@using PickToColor.Utility;
+@using PickToColor.EntityFramework;
+@using PickToColor.Models;
+
+<table class="table table-bordered" id="tblLocations">
+    <tr class="thead-dark text-light text-center">
+        <th class="text-center"><input type="checkbox" id="chkHeader" class="wh-20" onclick="ToggleCheckBoxes(this);" /></th>
+        <th>
+            Location ID
+        </th>
+        <th>
+            Location Code
+        </th>
+        <th>
+            Location Sound File
+        </th>
+        <th>
+            Color Sound File
+        </th>
+        <th>
+            Background Color
+        </th>
+        <th>
+            Font Color
+        </th>
+        <th hidden>
+            Picking Priority
+        </th>
+        <th>
+            Station
+        </th>
+        <th>
+            Active Since
+        </th>
+        <th>
+            Actions
+        </th>
+    </tr>
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            @*@foreach (var item in Model)
+                {*@
+            <tr>
+                <td class="text-center">
+                    <input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='@item.LocationMasterID' onclick="ToggleHeaderCheckBox(this);" />
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LocationID)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LocationCode)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LocationSoundFile)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ColorSoundFile)
+                </td>
+                <td style="background-color:
+                @Html.DisplayFor(modelItem => item.BackgroundColorCode)"></td>
+                <td style="background-color:
+                @Html.DisplayFor(modelItem => item.FontColorCode)"></td>
+                <td hidden>
+                    @Html.DisplayFor(modelItem => item.PickingPriority)
+                </td>
+                <td>
+                    @{
+                        DataContext context1 = new DataContext();
+                        item.StationName = context1.Stations.Where(a => a.IsActive && a.StationID.Equals(item.StationID)).Select(a => a.StationName).First();
+
+                    }
+
+
+                    @Html.DisplayFor(modelItem => item.StationName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedOn)
+                </td>
+                <td class="text-center">
+                    <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(@item.LocationMasterID,'@HttpUtility.JavaScriptStringEncode(item.LocationID)','@HttpUtility.JavaScriptStringEncode(item.LocationCode)','@HttpUtility.JavaScriptStringEncode(item.LocationSoundFile)','@HttpUtility.JavaScriptStringEncode(item.ColorSoundFile)','@HttpUtility.JavaScriptStringEncode(item.BackgroundColorCode)','@HttpUtility.JavaScriptStringEncode(item.FontColorCode)',@HttpUtility.JavaScriptStringEncode(item.PickingPriority.ToString()),@HttpUtility.JavaScriptStringEncode(item.StationID.ToString()))">
+                        <i class="fas fa-pencil-alt"></i> Edit
+                    </a>
+                    @* &nbsp;&nbsp;*@
+                    @*<a class="btn btn-sm btn-danger text-light mb-3 mb-sm-0" onclick="ConfirmDelete(@item.LocationMasterID);">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>*@
+
+                </td>
+            </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="11">
+                                    <div class="alert alert-dark text-muted text-center">No records found.</div>
+                                </td>
+                            </tr>
+                        }
+
+    @if (Model.PageCount > 0)
+    {
+        <tr>
+            <td colspan="11">
+                <div class="float-left">
+                    <nav>
+                        @Html.PagedListPager(Model, page => string.Format("javascript:LoadPage({0})", page),
+                        new PagedListRenderOptions()
+                        {
+                            UlElementClasses = new List<string> { "pagination", "pagination-sm", "mb-3", "mb-sm-0" },
+                            LiElementClasses = new List<string> { "page-item" },
+                            FunctionToTransformEachPageLink = (li, a) =>
+                            {
+                                a.AddCssClass("page-link");
+                                li.InnerHtml = a.ToString();
+                                return li;
+                            }
+                        })
+                    </nav>
+                </div>
+                <div class="float-right">
+                    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+                </div>
+            </td>
+        </tr>
+    }
+</table>
+<div class="modal fade" id="divEditLocation" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Location details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Location ID</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateLocationID" />
+                        <input type="hidden" class="form-control" id="txtUpdateLocationMasterID" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Location Code</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateLocationCode" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Location Sound File</label>
+                    <div class="col-sm-8">
+                        <label type="text" id="lblUpdateLocationSoundFile" name="lblUpdateLocationSoundFile"></label>
+                        <input type="file" name="txtUpdateLocationSoundFile" id="txtUpdateLocationSoundFile" class="form-control" onclick="this.value = null" onchange="OnLocationSoundFileChange(event)" accept="audio/*">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Color Sound File</label>
+                    <div class="col-sm-8">
+                        <label type="text" id="lblUpdateColorSoundFile" name="lblUpdateColorSoundFile"></label>
+                        <input type="file" name="txtUpdateColorSoundFile" id="txtUpdateColorSoundFile" class="form-control" onclick="this.value = null" onchange="OnColorSoundFileChange(event)" accept="audio/*">
+
+                        @*<input type="file" class="form-control-file" id="txtUpdateColorSoundFile" name="txtUpdateColorSoundFile"  onclick="this.value = null" aria-describedby="fileHelp">*@
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Background Color</label>
+                    <div class="col-sm-8">
+                        <input type="hidden" id="txtUpdateBackgroundColorCode" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Font Color</label>
+                    <div class="col-sm-8">
+                        <input type="hidden" id="txtUpdateFontColorCode" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row" hidden>
+                    <label class="col-sm-4 col-form-label">Picking Priority</label>
+                    <div class="col-sm-8">
+                        <input type="text" id="txtUpdatePickingPriority" name="txtUpdatePickingPriority" class="form-control" value="1"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Station</label>
+                    <div class="col-sm-8">
+                        <select id="ddlUpdateStationID" name="ddlUpdateStationID" class="form-control">
+                            <option value="">Choose Station</option>
+                            @{
+                                DataContext context = new DataContext();
+                                //List<LocationModel> Locations = context.Locations.Where(a => a.IsActive).ToList();
+                                List<StationModel> Stations = context.Stations.Where(a => a.IsActive).ToList();
+                                if (Stations != null && Stations.Any())
+                                {
+                                    foreach (StationModel station in Stations)
+                                    {
+                                        <option value='@station.StationID'>@station.StationName</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnModalConfirmOK" onclick="UpdateLocation();">Ok</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

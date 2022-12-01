@@ -1,0 +1,167 @@
+﻿@using PickToColor.Utility;
+@using System.Web.Optimization;
+@{
+    Layout = null;
+    ViewBag.Title = "Login - Pick To Color System - Cental Warehouse";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE;IE=9;chrome=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="~/Images/favicon.png" />
+    @Styles.Render("~/bundles/commoncss")
+    @Styles.Render("~/bundles/logincss")
+    @Scripts.Render("~/bundles/fontawesome")
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div id="divParent" class="Parent-Panel">
+            <div id="divChild" class="Center-Panel">
+                <div class="row">
+                    <div class="col Logo-Panel">
+                        <img src="~/Images/Logo.png" class="img-responsive img-logo" />
+                        <p class="text-center text-highlight">Pick To Color</p>
+                    </div>
+                </div>
+                <div class="row Login-Panel">
+                    <div class="col">
+                        <form action="~/Login/DoAuthentication" method="post">
+
+                            <div class="form-group input-group" style="display:block">
+                                <p class="text-highlight d-block text-center">User Login</p>
+                            </div>
+                            @if (TempData[KeyConstants.LoginError] != null && (bool)TempData[KeyConstants.LoginError])
+                            {
+                                <div class="form-group input-group">
+                                    <div class="alert alert-danger">
+                                        The entered username, password does not match. Please check and try again.
+                                    </div>
+                                </div>
+                                TempData.Remove(KeyConstants.LoginError);
+                            }
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
+                                </div>
+                                <input class="form-control required" type="text" name="username" id="txtUserName" tabindex="1" data-message="Please enter Username" placeholder="Username" />
+                            </div>
+                            <div id="LoginType">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="basic-addon2"><i class="fas fa-key"></i></span>
+                                    </div>
+                                    <input class="form-control required" type="password" id="txtPassword" name="password" tabindex="2" data-message="Please enter Password" id="txtPassword" placeholder="Password" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <input type="hidden" id="usertype" name="usertype" value="Operator">
+                                <input type="submit" class="btn btn-primary btn-block" style="background-color:midnightblue;border-color:midnightblue;" onclick="return ValidatePage();" value="Login" />
+                            </div>
+
+                            <div class="form-group">
+                                <a style="color:black" href="#" id="chooseLogin">Admin Login</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="loading-container d-none">
+        <div class="row text-center">
+            <div class="col-12">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p class="display-4">Loading...</p>
+            </div>
+        </div>
+    </div>
+    @Scripts.Render("~/bundles/commonjs")
+    <script>
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) { return pair[1]; }
+            }
+            return (false);
+        }
+
+
+        $(document).ready(function () {
+            $('input[name=username]').focus();
+        });
+
+        function ValidatePage() {
+            if (ValidateRequired()) {
+                ShowLoading();
+                return true;
+            }
+            else
+                return false;
+        }
+
+        function toggleCheckBox() {
+            if ($('#chkRememberMe').prop('checked'))
+                $('#chkRememberMe').prop('checked', false);
+            else
+                $('#chkRememberMe').prop('checked', true);
+        }
+
+        var param = getQueryVariable("param");
+       
+        if (param == "Admin")
+        {
+            $('#usertype').val('Admin');
+            $("#chooseLogin").text('Operator Login');
+            var x = document.getElementById("LoginType");
+            x.style.display = "block";
+            $(this).html("Operator Login");
+            $('#txtPassword').removeClass('form-control');
+            $('#txtPassword').addClass('form-control required');
+            $('#txtUserName').focus();
+        }
+        else
+        {
+            $("#chooseLogin").text('Admin Login');
+            $('#usertype').val('Operator');
+            var x = document.getElementById("LoginType");
+            x.style.display = "none";
+            $(this).html("Admin Login");
+            $('#txtPassword').removeClass('form-control required');
+            $('#txtPassword').addClass('form-control');
+            $('#txtUserName').focus();
+        }
+
+        $("#chooseLogin").on('click', function () {
+            var x = document.getElementById("LoginType");
+
+            if ($(this).text() == "Admin Login") {
+                $('#usertype').val('Admin');
+                x.style.display = "block";
+                $(this).html("Operator Login");
+                $('#txtPassword').removeClass('form-control');
+                $('#txtPassword').addClass('form-control required');
+                $('#txtUserName').focus();
+            }
+            else {
+                $('#usertype').val('Operator');
+
+                x.style.display = "none";
+                $(this).html("Admin Login");
+                $('#txtPassword').removeClass('form-control required');
+                $('#txtPassword').addClass('form-control');
+                $('#txtUserName').focus();
+            }
+
+
+        });
+    </script>
+</body>
+</html>

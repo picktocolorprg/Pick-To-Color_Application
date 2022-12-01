@@ -1,0 +1,32 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE;IE=9;chrome=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/Login.css" rel="stylesheet" />
+    <link href="~/Content/fa-svg-with-js.css" rel="stylesheet" />
+    <script src="~/Scripts/fontawesome-all.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div id="divParent" class="Parent-Panel">
+            <div id="divChild" class="Center-Panel bg-blur-black text-left" style="min-height:200px;width:500px;">
+                <i class="fas fa-exclamation-triangle fa-5x fa-pull-left fa-border"></i>
+                <strong>HTTP 403 Error: </strong> <br/>You are trying to view a page that is not available to your user account. <br/><br/> <a class="btn btn-success" href="~/Login/Index">Go back to Login</a>
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <script src="~/Scripts/popper.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/CommonUtil.js"></script>
+</body>
+</html>

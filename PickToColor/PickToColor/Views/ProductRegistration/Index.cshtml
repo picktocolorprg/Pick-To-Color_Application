@@ -1,0 +1,489 @@
+﻿@using PickToColor.Models;
+@using PickToColor.EntityFramework;
+@using PickToColor.Utility;
+@{
+    ViewBag.Title = "Register Products | Pick to Color System | Central Logistics Pte. Ltd.";
+}
+@{
+    List<CustomerModel> Customers = null;
+    List<LocationModel> Locations = null;
+}
+
+@*The below script rendering is for Success or Error message while uploading excel file*@
+@section ExecutableScripts{
+    @{
+        bool? NoError = TempData[KeyConstants.ProductUploadSuccess] != null && (bool)TempData[KeyConstants.ProductUploadSuccess] ? true : (TempData[KeyConstants.ProductUploadSuccess] != null ? false : (bool?)null);
+        string ErrorMessage = (NoError.HasValue && !NoError.Value) ? TempData[KeyConstants.ProductUploadFailureError].ToString() : string.Empty;
+        if (NoError.HasValue && NoError.Value)
+        {
+            <script>
+                ShowModalDialog('The Products are uploaded successfully', 'Product Import Successful!');
+            </script>
+        }
+        else if (NoError.HasValue)
+        {
+            <script>
+                ShowModalDialog('@Html.Raw(ErrorMessage)', 'Failed to Import Product details!');
+            </script>
+            TempData.Remove(KeyConstants.ProductUploadFailureError);
+        }
+    }
+}
+
+
+<h2>Manage Products</h2>
+<hr />
+<div class="row">
+    <div class="col-12 text-right">
+        <a onclick="AddProduct();" class="btn btn-primary text-light mb-3 mr-sm-3 mr-0 d-sm-inline-block d-block"><i class="fas fa-plus-square"></i>&nbsp; Add New Product</a>
+        @*<a onclick="OpenExcelUpload();" class="btn btn-primary text-light mb-3 mr-sm-3 mr-0  d-sm-inline-block d-block"><i class="fas fa-upload"></i>&nbsp; Upload Product List</a>*@
+       @* <a onclick="DownloadSampleFormat();" class="btn btn-info text-light mb-3 d-sm-inline-block d-block"><i class="fas fa-download"></i>&nbsp; Download Sample Format</a>*@
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block"> Search</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divProductSearch');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divProductSearch">
+        <div class="row">
+            <div class="col-12 col-sm-4 col-md-3 mb-3">
+                <span>Customer <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-12 col-sm-4 col-md-3 mb-3">
+                <select id="ddlCustomers" name="CustomerID" class="form-control" data-message="Select a Customer to view Products" onchange="ShowCustomer(this); UpdateResults();">
+                    <option value="">Choose Customer</option>
+                    @{
+                        DataContext context = new DataContext();
+                        Customers = context.Customers.Where(a => a.IsActive).ToList();
+                        Locations = context.Locations.Where(a => a.IsActive).ToList();
+                        if (Customers != null && Customers.Any())
+                        {
+                            foreach (CustomerModel customer in Customers)
+                            {
+                                <option value='@customer.CustomerID' data-name='@customer.CustomerName'>@customer.CustomerCode</option>
+                            }
+                        }
+                    }
+
+                </select>
+            </div>
+            <div class="col-12 col-sm-4 col-md-6 mb-3">
+                <span class="display-label-name" id="spnCustomerName"></span>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <span>SKU</span>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <input type="text" id="txtSKU" name="SKU" class="form-control" onchange="UpdateResults();" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <span>Barcode</span>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <input type="text" id="txtBarcode" name="Barcode" class="form-control" onchange="UpdateResults();" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <span>Description</span>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <textarea id="txtDescription" name="Description" rows="3" class="form-control" onchange="UpdateResults();"></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <button type="button" class="btn btn-primary mb-3" onclick="Search();">
+                    <i class="fas fa-sync"></i>&nbsp;Refresh
+                </button>
+                <a class="btn btn-danger text-light mb-3" onclick="ClearForm()"><i class="fas fa-eraser"></i>&nbsp;Clear</a>
+            </div>
+        </div>
+        <div class="row row-mb-minus10">
+            <div class="col-12">
+                <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block"> Products List</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divProductsList');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divProductsList">
+        <div class="table-responsive">
+            @{
+                Html.RenderAction("GetAllProducts", "ProductRegistration", new { @pageno = 1 });
+            }
+        </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <a class="btn btn-danger mt-3 mt-sm-0 d-block d-sm-inline-block text-light" onclick="ConfirmDelete();"><i class="fas fa-trash-alt"></i> Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="divAddEditProduct" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lblTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <div class="col-sm-12">
+                        <div id="divValidationErrorMessage"></div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Customer <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <select id="ddlAddEditCustomer" class="form-control popup-required">
+                            <option value="">Choose Customer</option>
+                            @if (Customers != null && Customers.Any())
+                            {
+                                foreach (CustomerModel customer in Customers)
+                                {
+                                    <option value='@customer.CustomerID'>@customer.CustomerCode</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label pt-0">BarCode <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control popup-required" id="txtAddEditBarcode" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label pt-0">SKU <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control popup-required" id="txtAddEditSKU" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label pt-0">Description</label>
+                    <div class="col-sm-8">
+                        <textarea rows="2" class="form-control" id="txtAddEditDescription"></textarea>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label pt-0">Associated Picking Quantity <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control popup-required numeric" id="txtAddEditAPQty" />
+                    </div>
+                </div>
+                <div class="form-group row" hidden>
+                    <label class="col-sm-4 col-form-label pt-0">Check SN</label>
+                    <div class="col-sm-8 text-left">
+                        <input type="checkbox" class="wh-20" id="chkAddEditCheckSN"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label pt-0">Cubic Metres <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control popup-required numeric" id="txtAddEditCBM" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label pt-0">Location <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <select id="ddlAddEditLocation" class="form-control popup-required">
+                            <option value="">Choose Location</option>
+                            @if (Locations != null && Locations.Any())
+                            {
+                                foreach (LocationModel location in Locations)
+                                {
+                                    <option value='@location.LocationMasterID'>@location.LocationID</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="row row-mb-minus10">
+                    <div class="col-12">
+                        <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnModalConfirmOK" onclick="SaveProduct();">Save</button>
+                <button type="button" class="btn btn-primary" id="btnModalUpdateOK" onclick="UpdateProduct();">Update</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="divExcelUploadProducts" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-lg modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Products</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <div class="col-sm-12">
+                        <div id="divExcelValidationErrorMessage"></div>
+                    </div>
+                </div>
+                <form id="frmExcelUpload" enctype="multipart/form-data" method="post" action='@Url.Action("ExcelUpload","ProductRegistration")'>
+                    <div class="form-group row">
+                        <label class="text-center text-md-left mb-3 mb-sm-0 col-sm-12 col-md-4 col-form-label">Select File to Upload</label>
+                        <div class="col-sm-12 col-md-8 text-center text-md-left">
+                            <input type="file" name="ExcelFile" id="fuExcel" accept=".xlsx" class="inputfile file-upload" />
+                            <label for="fuExcel">
+                                <span></span>
+                                <strong>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17"><path d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z" /></svg>
+                                    <i class="pl-0 pr-0 pb-0 pt-0 d-inline">
+                                        Choose &hellip;
+                                    </i>
+                                </strong>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnUploadExcel" onclick="UploadProductLists()">Upload</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var CurrentSearch = {
+        CustomerID: '',
+        SKU: '',
+        Barcode: '',
+        Description: '',
+        pageno: 1
+    }
+
+    function AddProduct() {
+        $('#divAddEditProduct').modal('show');
+        $('#btnModalUpdateOK').hide();
+        $('#btnModalConfirmOK').show();
+        $('#divAddEditProduct').on('hidden.bs.modal', function (e) {
+            $('').popover('hide')
+        })
+        ClearAddEditForm();
+        $('#lblTitle').text('Add New Product');
+    }
+    function SaveProduct() {
+        if (ValidatePopupRequired('#divValidationErrorMessage')) {
+            $('#divAddEditProduct').modal('hide');
+            $.ajax({
+                url: '@Url.Action("AddProduct","ProductRegistration")',
+                type: 'POST',
+                data: {
+                    CustomerID: $('#ddlAddEditCustomer').val(),
+                    Barcode: $('#txtAddEditBarcode').val(),
+                    SKU: $('#txtAddEditSKU').val(),
+                    Description: $('#txtAddEditDescription').val(),
+                    AssociatedPickingQty: parseFloat($('#txtAddEditAPQty').val()),
+                    CheckSN: $('#chkAddEditCheckSN').prop('checked'),
+                    CBM: parseFloat($('#txtAddEditCBM').val()),
+                    LocationMasterID: $('#ddlAddEditLocation').val()
+                },
+                success: function (result) {
+                    $('#tblProducts').load('@Url.Action("GetAllProducts", "ProductRegistration")', CurrentSearch);
+                    ShowModalDialog('The Product is added successfully!', 'Operation Successful');
+                },
+                error: function (errormsg) {
+                    ShowModalDialog('The product addition has failed. Please try again later after some time.', 'Product addition failed!');
+                }
+            });
+        }
+    }
+
+
+    function ClearAddEditForm() {
+        $('#txtAddEditCBM').removeClass('b-Red').val('');
+        $('#chkAddEditCheckSN').prop('checked', false);
+        $('#txtAddEditAPQty').removeClass('b-Red').val('');
+        $('#txtAddEditDescription').val('');
+        $('#txtAddEditSKU').removeClass('b-Red').val('');
+        $('#txtAddEditBarcode').removeClass('b-Red').val('');
+        $('#ddlAddEditCustomer').removeClass('b-Red').val('');
+        $('#divValidationErrorMessage').html('');
+        $('#ddlAddEditCustomer').data('id', '');
+        $('#ddlAddEditLocation').removeClass('b-Red').val('');
+    }
+
+    function ClearForm() {
+        $('#txtDescription').val('');
+        $('#txtBarcode').val('');
+        $('#txtSKU').val('')
+        $('#ddlCustomers').val('');
+        $('#spnCustomerName').text('');
+    }
+
+    function UpdateResults()
+    {
+        Search();
+    }
+
+    function Search() {
+        if (ValidateRequired()) {
+            ShowLoading();
+            CurrentSearch = {
+                CustomerID: $('#ddlCustomers').val(),
+                Barcode: $('#txtBarcode').val(),
+                Description: $('#txtDescription').val(),
+                SKU: $('#txtSKU').val(),
+                pageno: 1
+            };
+            PerformSearch();
+        }
+    }
+
+    function LoadPage(pagenumber) {
+        ShowLoading();
+        CurrentSearch.pageno = pagenumber;
+        PerformSearch();
+    }
+
+    function PerformSearch() {
+        $.ajax({
+            url: '@Url.Action("GetAllProducts","ProductRegistration")',
+            type: 'POST',
+            data: CurrentSearch,
+            success: function (result) {
+                $('#tblProducts').html(result);
+                HideLoading();
+            },
+            error: function (errormsg) {
+                ShowModalDialog('The product search or page navigation has failed. Please try again later after some time.', 'Product search failed!');
+                HideLoading();
+            }
+        });
+    }
+
+
+    function ConfirmDelete() {
+        if ($('#tblProducts').find('tr:not(:has(th)) td :checkbox.child-item:checked').length == 0) {
+            ShowModalDialog('Please select a product to delete', 'Information');
+            return;
+        }
+
+        var ItemsToDelete = new Array();
+        $('#tblProducts').find('tr:not(:has(th)) td :checkbox.child-item:checked').each(function () {
+            ItemsToDelete.push($(this).data('id'));
+        });
+
+
+        bootbox.confirm("Are you sure want to delete the selected Product(s)?", function (result) {
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("DeleteProducts","ProductRegistration")',
+                    type: 'POST',
+                    data: { ProductIDs: ItemsToDelete },
+                    success: function (result) {
+                        $('#tblProducts').load('@Url.Action("GetAllProducts", "ProductRegistration")', CurrentSearch);
+                        ShowModalDialog('The selected product(s) is removed successfully', 'Successful Delete');
+                    },
+                    error: function (errormessage) {
+                        ShowModalDialog('The delete operation has failed. Please try again later after some time.', 'Delete failed!');
+                    }
+                });
+            }
+        });
+    }
+
+    function OnEdit(id, cbm, checkSN, APQuantity, description, sku, barcode, customer, location) {
+        $('#divAddEditProduct').modal('show');
+        $('#lblTitle').text('Update Product Details');
+        $('#btnModalUpdateOK').show();
+        $('#btnModalConfirmOK').hide();
+        ClearAddEditForm();
+        $('#txtAddEditCBM').val(cbm);
+        $('#chkAddEditCheckSN').prop('checked', checkSN);
+        $('#txtAddEditAPQty').val(APQuantity);
+        $('#txtAddEditDescription').val(description);
+        $('#txtAddEditSKU').val(sku)
+        $('#txtAddEditBarcode').val(barcode);
+        $('#ddlAddEditCustomer').val(customer);
+        $('#ddlAddEditCustomer').data('id', id);
+        $('#ddlAddEditLocation').val(location)
+    }
+
+    function UpdateProduct() {
+        if (ValidatePopupRequired('#divValidationErrorMessage')) {
+            $('#divAddEditProduct').modal('hide');
+            $.ajax({
+                url: '@Url.Action("UpdateProduct", "ProductRegistration")',
+                type: 'POST',
+                data: {
+                    ProductID: $('#ddlAddEditCustomer').data('id'),
+                    CustomerID: $('#ddlAddEditCustomer').val(),
+                    Barcode: $('#txtAddEditBarcode').val(),
+                    SKU: $('#txtAddEditSKU').val(),
+                    Description: $('#txtAddEditDescription').val(),
+                    AssociatedPickingQty: $('#txtAddEditAPQty').val(),
+                    CheckSN: $('#chkAddEditCheckSN').prop('checked'),
+                    CBM: $('#txtAddEditCBM').val(),
+                    LocationMasterID: $('#ddlAddEditLocation').val()
+                },
+                success: function (result) {
+                    $('#tblProducts').load('@Url.Action("GetAllProducts", "ProductRegistration")', CurrentSearch);
+                    ShowModalDialog('The Product is updated successfully', 'Successful Update');
+                },
+                error: function () {
+                    ShowModalDialog('The product details update has failed. Please try again later after some time.', 'Product details update failed!');
+                }
+            });
+            $('#divEditUser').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+        }
+    }
+
+    function ShowCustomer(ddl) {
+        if ($(ddl).val() != '') {
+            $('#spnCustomerName').text($(ddl).find('option:selected').data('name'));
+        }
+        else
+            $('#spnCustomerName').text('');
+    }
+
+    //function OpenExcelUpload() {
+    //    $('#divExcelUploadProducts').modal('show');
+    //}
+
+    //function UploadProductLists() {
+    //    if (!$('#fuExcel').val() == '') {
+    //        $('#divExcelUploadProducts').modal('hide');
+    //        bootbox.confirm("Are you sure want to upload the products? This operation will remove the existing products for the customers in spreadsheet and cannot be undone.", function (result) {
+    //            if (result) {
+    //                $('#frmExcelUpload').submit();
+    //            }
+    //            else {
+    //                OpenExcelUpload();
+    //            }
+    //        });
+    //    }
+    //}
+
+    @*function DownloadSampleFormat() {
+        window.open('@Url.Action("DownloadFormat","ProductRegistration")', '_blank');
+    }*@
+</script>

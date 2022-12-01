@@ -1,0 +1,662 @@
+﻿
+    @using System.Web.Optimization;
+    @model PickToColor.Models.LocationModel
+    @using PickToColor.Utility;
+    @using PickToColor.EntityFramework;
+    @using PickToColor.Models;
+
+
+    @{
+        ViewBag.Title = "Manage Locations";
+    }
+
+    @section PickColorDependency{
+        @Styles.Render("~/bundles/minicolorCSS")
+    }
+    @section PickColorJS{
+        @Scripts.Render("~/bundles/minicolorJS")
+    }
+
+    <style>
+        .count-input {
+            position: relative;
+            width: 100%;
+            max-width: 165px;
+            margin: 10px 0;
+        }
+
+            .count-input input {
+                width: 100%;
+                height: 36.92307692px;
+                border: 1px solid #000;
+                border-radius: 2px;
+                background: none;
+                text-align: center;
+            }
+
+                .count-input input:focus {
+                    outline: none;
+                }
+
+            .count-input .incr-btn {
+                display: block;
+                position: absolute;
+                width: 30px;
+                height: 30px;
+                font-size: 26px;
+                font-weight: 300;
+                text-align: center;
+                line-height: 30px;
+                top: 50%;
+                right: 0;
+                margin-top: -15px;
+                text-decoration: none;
+            }
+
+                .count-input .incr-btn:first-child {
+                    right: auto;
+                    left: 0;
+                    top: 46%;
+                }
+
+            .count-input.count-input-sm {
+                max-width: 125px;
+            }
+
+                .count-input.count-input-sm input {
+                    height: 36px;
+                }
+
+            .count-input.count-input-lg {
+                max-width: 200px;
+            }
+
+                .count-input.count-input-lg input {
+                    height: 70px;
+                    border-radius: 3px;
+                }
+    </style>
+    <h2>Manage Locations</h2>
+    <hr />
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="d-inline-block">New Location Registration</h4>
+            <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divCreateLocations');"><i class="fas fa-chevron-up"></i></a>
+        </div>
+
+        <div class="card-body collapse show" id="divCreateLocations">
+
+
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Location ID <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <input type="text" id="txtLocationID" class="form-control required" data-message="Location ID is required." maxlength="50" />
+                </div>
+            </div><br />
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Location Code <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <input type="text" id="txtLocationCode" class="form-control required" data-message="Location Code is required." maxlength="10" />
+                </div>
+            </div><br />
+
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Location Sound File <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <input type="file" name="txtLocationSoundFile" id="txtLocationSoundFile" class="required form-control" data-message="Location Sound File is required." accept="audio/*">
+                    <input type="hidden" name="LocationSoundFile" id="LocationSoundFile" value="">
+                </div>
+
+            </div><br />
+
+
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Color Sound File <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <input type="file" name="txtColorSoundFile" id="txtColorSoundFile" class="required form-control" data-message="Color Sound File is required." accept="audio/*">
+                    <input type="hidden" name="ColorSoundFile" id="ColorSoundFile" value="">
+                </div>
+            </div><br />
+
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Background Color <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <input type="hidden" id="txtLocationColor" name="BackgroundColorCode" class="form-control" />
+                </div>
+            </div><br />
+
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Font Color <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <input type="hidden" id="txtColor" name="FontColorCode" class="required form-control" />
+                </div>
+            </div><br />
+
+            <div class="row" hidden>
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Picking Priority <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+
+                    <div class="count-input space-bottom">
+                        <a class="incr-btn" data-action="decrease" href="#">–</a>
+
+                        <input name="PickingPriority" id="txtPickingPriority" class="form-control quantity" type="text" value="1" onfocus="CursorBlur()" />
+                        <a class="incr-btn" data-action="increase" href="#">&plus;</a>
+                    </div>
+
+                </div>
+            </div><br />
+
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <span class="control-label col-md-2">Station <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+                </div>
+                <div class="col-md-9 col-xs-12">
+                    <select id="ddlBoxes" name="StationID" class="required form-control" data-message="Select a Station ID">
+                        <option value="">Choose Station</option>
+                        @{
+                            DataContext context = new DataContext();
+                            //List<LocationModel> Locations = context.Locations.Where(a => a.IsActive).ToList();
+                            List<StationModel> Stations = context.Stations.Where(a => a.IsActive).ToList();
+                            if (Stations != null && Stations.Any())
+                            {
+                                foreach (StationModel station in Stations)
+                                {
+                                    <option value='@station.StationID'>@station.StationName</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+                <div>
+                </div>
+                <div class="col-md-10 col-md-3 col-xs-12">
+                    <BR/>
+                </div>
+            </div><br />
+
+
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-12 text-center">
+                    <button type="button" class="btn btn-primary" onclick="return ValidatePage();">
+                        <i class="fas fa-plus-square"></i>&nbsp;Add
+                    </button>
+                </div>
+            </div>
+            <div class="row row-mb-minus10">
+                <div class="col-12">
+                    <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <br />
+
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h4 class="d-inline-block">Select Locations to Edit</h4>
+                <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divSelectLocations');"><i class="fas fa-chevron-up"></i></a>
+            </div>
+            <div class="card-body collapse show" id="divSelectLocations">
+                <div class="table-responsive" id="tblLocations">
+                    @{
+                        Html.RenderAction("GetAllLocations", "Location");
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <a class="btn btn-danger mt-3 mt-sm-0 d-block d-sm-inline-block text-light" onclick="ConfirmDelete();"><i class="fas fa-trash-alt"></i> Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section ExecutableScripts{
+        <script>
+            $.minicolors = {
+                defaults: {
+                    animationSpeed: 50,
+                    animationEasing: 'swing',
+                    change: null,
+                    changeDelay: 0,
+                    control: 'hue',
+                    defaultValue: '#EAECEE', //orange color default
+                    format: 'hex',
+                    hide: null,
+                    hideSpeed: 100,
+                    inline: false,
+                    keywords: '',
+                    letterCase: 'lowercase',
+                    opacity: false,
+                    position: 'bottom left',
+                    show: null,
+                    showSpeed: 100,
+                    theme: 'default',
+                    swatches: []
+                }
+            };
+
+
+            $(document).ready(function () {
+                $('#txtColor').minicolors();
+                $('#txtLocationColor').minicolors();
+                $('#txtUpdateBackgroundColorCode').minicolors();
+                $('#txtUpdateFontColorCode').minicolors();
+            });
+
+
+            $(".incr-btn").on("click", function (e) {
+                var $button = $(this);
+                var oldValue = $button.parent().find('.quantity').val();
+                $button.parent().find('.incr-btn[data-action="decrease"]').removeClass('inactive');
+                if ($button.data('action') == "increase") {
+                    var newVal = parseFloat(oldValue) + 1;
+                } else {
+                    // Don't allow decrementing below 1
+                    if (oldValue > 1) {
+                        var newVal = parseFloat(oldValue) - 1;
+                    } else {
+                        newVal = 1;
+                        $button.addClass('inactive');
+                    }
+                }
+                $button.parent().find('.quantity').val(newVal);
+                e.preventDefault();
+            });
+
+            function ValidatePage() {
+
+                if (ValidateRequired()) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("Create", "Location")',
+                        data: { NewLocation: { LocationID: $('#txtLocationID').val(), LocationCode: $('#txtLocationCode').val(), LocationSoundFile: "/Audio/" + $('#LocationSoundFile').val(), ColorSoundFile: "/Audio/" + $('#ColorSoundFile').val(), BackgroundColorCode: $('#txtLocationColor').val(), FontColorCode: $('#txtColor').val(), PickingPriority: $('#txtPickingPriority').val(), stationid: $('#ddlBoxes').val() } },
+                        success: function (result) {
+                            //$('#StationName').val('');
+                            ShowModalDialog('Location is added successfully!', 'Successful Creation');
+                            $('#txtLocationID').val('');
+                            $('#txtLocationCode').val('');
+                            $('#LocationSoundFile').val('');
+                            $('#txtLocationSoundFile').val('');
+                            $('#ColorSoundFile').val('');
+                            $('#txtColorSoundFile').val('');
+                            $('#txtPickingPriority').val('1')
+                            $('#ddlBoxes').prop('selectedIndex', 0);
+
+                            $('#txtColor').minicolors('value', { color: '#EAECEE' });
+                            $('#txtLocationColor').minicolors('value', { color: '#EAECEE' });
+
+                            $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")');
+
+                            @*$('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', function () {
+                                $('#txtUpdateBackgroundColorCode').minicolors();
+                                $('#txtUpdateFontColorCode').minicolors();
+                            });*@
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            ShowModalDialog(xhr.responseText, 'Creation failed');
+                        }
+                    });
+                }
+
+            }
+
+
+            function OnEdit(locationMasterID, locationID, locationCode, locationSoundFile, colorSoundFile, backgroundColorCode, fontColorCode, pickingPriority, stationID) {
+
+                $('#divEditLocation').modal('show');
+                ClearUpdateForm();
+                $('#txtUpdateLocationMasterID').val(locationMasterID);
+                $('#txtUpdateLocationID').val(locationID);
+                $('#txtUpdateLocationCode').val(locationCode);
+                $('#lblUpdateLocationSoundFile').html(locationSoundFile);
+                $('#lblUpdateColorSoundFile').html(colorSoundFile);
+                $('#lblUpdateLocationSoundFile').val(locationSoundFile);
+                $('#lblUpdateColorSoundFile').val(colorSoundFile);
+                $('#txtUpdateBackgroundColorCode').minicolors('value', { color: backgroundColorCode });
+                $('#txtUpdateFontColorCode').minicolors('value', { color: fontColorCode });
+                $('#txtUpdatePickingPriority').val(pickingPriority);
+                $('#ddlUpdateStationID').val(stationID);
+                //$('#txtUpdateColorSoundFile').val(colorSoundFile);
+                //$('#txtUpdateLocationSoundFile').val(locationSoundFile);
+
+            }
+            function UpdateLocation() {
+                var IsUpdateValid = true;
+                if ($.trim($('#txtUpdateLocationID').val()) == '') {
+                    ShowError($('#txtUpdateLocationID'), 'Please enter the Location ID');
+                    IsUpdateValid = false;
+                }
+                if ($.trim($('#txtUpdateLocationCode').val()) == '') {
+                    ShowError($('#txtUpdateLocationCode'), 'Please enter the Location Code');
+                    IsUpdateValid = false;
+                }
+                //if ($.trim($('#txtUpdateLocationSoundFile').val()) == '') {
+                //    ShowError($('#txtUpdateLocationSoundFile'), 'Please enter the Location Sound File');
+                //    IsUpdateValid = false;
+                //}
+                if ($.trim($('#txtUpdatePickingPriority').val()) == '') {
+                    ShowError($('#txtUpdatePickingPriority'), 'Please enter the Picking Priority');
+                    IsUpdateValid = false;
+                }
+                if (!(Math.floor($.trim($('#txtUpdatePickingPriority').val())) == $.trim($('#txtUpdatePickingPriority').val()) && $.isNumeric($.trim($('#txtUpdatePickingPriority').val())))) {
+
+                    ShowError($('#txtUpdatePickingPriority'), 'Picking Priority must be integer value');
+                    IsUpdateValid = false;
+                }
+                //if ($.trim($('#txtUpdateColorSoundFile').val()) == '') {
+                //    ShowError($('#txtUpdateColorSoundFile'), 'Please enter the Color Sound File');
+                //    IsUpdateValid = false;
+                //}
+
+                if (!IsUpdateValid) return false;
+
+                $.ajax({
+                    url: '@Url.Action("Edit","Location")',
+                    type: 'POST',
+                    data: { LocationMasterID: $.trim($('#txtUpdateLocationMasterID').val()), LocationID: $.trim($('#txtUpdateLocationID').val()), LocationCode: $.trim($('#txtUpdateLocationCode').val()), LocationSoundFile: "/Audio/" + $.trim($('#lblUpdateLocationSoundFile').val()), ColorSoundFile: "/Audio/" + $.trim($('#lblUpdateColorSoundFile').val()), BackgroundColorCode: $.trim($('#txtUpdateBackgroundColorCode').val()), FontColorCode: $.trim($('#txtUpdateFontColorCode').val()), PickingPriority: $.trim($('#txtUpdatePickingPriority').val()), stationid: $.trim($('#ddlUpdateStationID').val()) },
+                    success: function (result) {
+                        $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', function () {
+                            $('#txtUpdateBackgroundColorCode').minicolors();
+                            $('#txtUpdateFontColorCode').minicolors();
+
+                            ClearUpdateForm();
+                            ShowModalDialog('The Location account is updated successfully', 'Successful Update');
+                        });
+
+
+                    },
+                    error: function () {
+
+                        ShowModalDialog('The Location detail update has failed. Please try again later after some time.', 'Location details update failed!');
+                    }
+                });
+                $('#divEditLocation').modal('hide');
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
+            }
+
+
+            function CursorBlur() {
+                $("#txtPickingPriority").blur();
+            }
+
+            function ClearUpdateForm() {
+                $('#txtUpdateLocationID').val('');
+                $('#txtUpdateLocationCode').val('');
+                $('#lblUpdateLocationSoundFile').html('');
+                $('#lblUpdateColorSoundFile').html('');
+                $('#txtUpdateColorSoundFile').val('');
+                $('#txtUpdateLocationSoundFile').val('');
+                //$('#txtUpdateBackgroundColorCode').minicolors('value', { color: '#EAECEE' });
+                //$('#txtUpdateFontColorCode').minicolors('value', { color: '#EAECEE' });
+                $('#txtUpdatePickingPriority').val('');
+                $('#ddlUpdateStationID').val('0');
+            }
+
+            $('#txtLocationSoundFile').on('change', function (e) {
+                var files = e.target.files;
+                //var myID = 3; //uncomment this to make sure the ajax URL works
+                if (files.length > 0) {
+                    if (window.FormData !== undefined) {
+                        var data = new FormData();
+                        for (var x = 0; x < files.length; x++) {
+                            data.append("file" + x, files[x]);
+                        }
+
+                        $.ajax({
+                            type: "POST",
+                            url: '@Url.Action("SoundFileUpload", "Location")',
+                            contentType: false,
+                            processData: false,
+                            data: data,
+                            success: function (result) {
+                                $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', function () {
+                                    $('#txtUpdateBackgroundColorCode').minicolors();
+                                    $('#txtUpdateFontColorCode').minicolors();
+                                });
+
+                                if (result == 'File Upload failed. Please try again!') {
+                                    $('#txtLocationSoundFile').val('');
+                                    $('#LocationSoundFile').val('');
+                                    ShowModalDialog(result, 'Upload Failed');
+                                }
+                                else {
+                                    $('#LocationSoundFile').val(result);
+                                    ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                                }
+                            },
+                            error: function (xhr, status, p3, p4) {
+                                var err = "Error " + " " + status + " " + p3 + " " + p4;
+                                if (xhr.responseText && xhr.responseText[0] == "{")
+                                    err = JSON.parse(xhr.responseText).Message;
+                                ShowModalDialog(err, 'Successful Update');
+                            }
+                        });
+                    } else {
+                        alert("This browser doesn't support HTML5 file uploads!");
+                    }
+                }
+            });
+
+            $('#txtColorSoundFile').on('change', function (e) {
+                var files = e.target.files;
+                //var myID = 3; //uncomment this to make sure the ajax URL works
+                if (files.length > 0) {
+                    if (window.FormData !== undefined) {
+                        var data = new FormData();
+                        for (var x = 0; x < files.length; x++) {
+                            data.append("file" + x, files[x]);
+                        }
+                       
+
+                        $.ajax({
+                            type: "POST",
+                            url: '@Url.Action("SoundFileUpload", "Location")',
+                            contentType: false,
+                            processData: false,
+                            data: data,
+                            success: function (result) {
+                                $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', function () {
+                                    $('#txtUpdateBackgroundColorCode').minicolors();
+                                    $('#txtUpdateFontColorCode').minicolors();
+                                });
+
+                                if (result == 'File Upload failed. Please try again!') {
+                                    $('#txtColorSoundFile').val('');
+                                    $('#ColorSoundFile').val('');
+                                    ShowModalDialog(result, 'Upload Failed');
+                                }
+                                else {
+                                    $('#ColorSoundFile').val(result);
+                                    ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                                }
+                            },
+                            error: function (xhr, status, p3, p4) {
+                                var err = "Error " + " " + status + " " + p3 + " " + p4;
+                                if (xhr.responseText && xhr.responseText[0] == "{")
+                                    err = JSON.parse(xhr.responseText).Message;
+                                ShowModalDialog(err, 'Successful Update');
+                            }
+                        });
+                    } else {
+                        alert("This browser doesn't support HTML5 file uploads!");
+                    }
+                }
+            });
+
+            function OnColorSoundFileChange(e)
+            {
+                var files = e.target.files;
+                if (files.length > 0) {
+                    if (window.FormData !== undefined) {
+                        var data = new FormData();
+                        for (var x = 0; x < files.length; x++) {
+                            data.append("file" + x, files[x]);
+                        }
+
+                        $.ajax({
+                            type: "POST",
+                            url: '@Url.Action("SoundFileUpload", "Location")',
+                            contentType: false,
+                            processData: false,
+                            data: data,
+                            success: function (result) {
+
+                                    if (result == 'File Upload failed. Please try again!') {
+                                        $('#txtUpdateColorSoundFile').val('');
+                                        ShowModalDialog(result, 'Upload Failed');
+                                    }
+                                    else {
+                                         $('#lblUpdateColorSoundFile').val(result);
+                                         ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                                    }
+                        },
+                            error: function (xhr, status, p3, p4) {
+                                var err = "Error " + " " + status + " " + p3 + " " + p4;
+                                if (xhr.responseText && xhr.responseText[0] == "{")
+                                    err = JSON.parse(xhr.responseText).Message;
+                                ShowModalDialog(err, 'Successful Update');
+                            }
+                    });
+                } else {
+                    alert("This browser doesn't support HTML5 file uploads!");
+                }
+            }
+            }
+
+            function OnLocationSoundFileChange(e) {
+                var files = e.target.files;
+                if (files.length > 0) {
+                    if (window.FormData !== undefined) {
+                        var data = new FormData();
+                        for (var x = 0; x < files.length; x++) {
+                            data.append("file" + x, files[x]);
+                        }
+
+                        $.ajax({
+                            type: "POST",
+                            url: '@Url.Action("SoundFileUpload", "Location")',
+                            contentType: false,
+                            processData: false,
+                            data: data,
+                            success: function (result) {
+
+                                if (result == 'File Upload failed. Please try again!') {
+                                    $('#txtUpdateLocationSoundFile').val('');
+                                    ShowModalDialog(result, 'Upload Failed');
+                                }
+                                else {
+                                    $('#lblUpdateLocationSoundFile').val(result);
+                                    ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                                }
+                            },
+                            error: function (xhr, status, p3, p4) {
+                                var err = "Error " + " " + status + " " + p3 + " " + p4;
+                                if (xhr.responseText && xhr.responseText[0] == "{")
+                                    err = JSON.parse(xhr.responseText).Message;
+                                ShowModalDialog(err, 'Successful Update');
+                            }
+                        });
+                    } else {
+                        alert("This browser doesn't support HTML5 file uploads!");
+                    }
+                }
+            }
+
+
+     
+
+            function LoadPage(pagenumber) {
+                ShowLoading();
+                //PageNumber = pagenumber;
+                $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', { pageno: pagenumber }, function () {
+                    HideLoading();
+                    $('#txtColor').minicolors();
+                    $('#txtLocationColor').minicolors();
+                    $('#txtUpdateBackgroundColorCode').minicolors();
+                    $('#txtUpdateFontColorCode').minicolors();
+                    ClearUpdateForm();
+                });
+            }
+
+            function ConfirmDelete(locationMasterID) {
+
+                if ($('#tblLocations').find('tr:not(:has(th)) td :checkbox.child-item:checked').length == 0) {
+                    ShowModalDialog('Please select a location to delete', 'Information');
+                    return;
+                }
+
+                var ItemsToDelete = new Array();
+                $('#tblLocations').find('tr:not(:has(th)) td :checkbox.child-item:checked').each(function () {
+                    ItemsToDelete.push($(this).data('id'));
+                });
+
+                bootbox.confirm("Are you sure want to delete the selected Location(s)?", function (result) {
+                    if (result) {
+                        $.ajax({
+                            url: '@Url.Action("Delete", "Location")',
+                            type: 'POST',
+                            data: { LocationMasterIDs: ItemsToDelete },
+                            success: function (result) {
+                                if (result == 'System does not allow to delete this location becuase this Location is being used in Prouct Registration.') {
+                                    $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', { pageno: 1 });
+                                    ShowModalDialog(result, 'Delete Failed');
+                                }
+                                else {
+                                    $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', { pageno: 1 });                                    
+                                    ShowModalDialog('The selected Location(s) is removed successfully', 'Successful Delete');
+                                }
+                            },
+                            error: function (errormessage) {
+                                ShowModalDialog('The delete operation has failed. Please try again later after some time.', 'Delete failed!');
+                            }
+                        });
+                    }
+                });
+            }
+            @*function UploadSoundFile() {
+
+
+            ShowModalDialog('The Location detail update has failed. Please try again later after some time.', 'Location details update failed!');
+            $.ajax({
+                url: '@Url.Action("SoundFileUpload", "Location")',
+                type: 'POST',
+                data: { SoundFile: $.trim($('#LocationSoundFile')) },
+                success: function (result) {
+                    $('#tblLocations').load('@Url.Action("GetAllLocations", "Location")', function () {
+                        $('#txtUpdateBackgroundColorCode').minicolors();
+                        $('#txtUpdateFontColorCode').minicolors();
+                    });
+                    ShowModalDialog('This sound file is uploaded successfully', 'Successful Update');
+                },
+                error: function () {
+
+                    ShowModalDialog('This sound file is failed to upload. Please try again later after some time.', 'Sound File upload failed!');
+                }
+            });
+
+        }*@
+        </script>
+
+    }

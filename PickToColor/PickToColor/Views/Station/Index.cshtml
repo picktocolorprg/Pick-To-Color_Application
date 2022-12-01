@@ -1,0 +1,143 @@
+﻿
+@{
+    ViewBag.Title = "Station Registration | Pick to Color System | Central Logistics Pte. Ltd.";
+}
+
+<h2>Manage Stations</h2>
+
+<hr />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">New Station Registration</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divCreateStations');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divCreateStations">
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Station Name <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="text" id="StationName" class="form-control required" data-message="Station Name is required." maxlength=50 />
+            </div>
+        </div><br />
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-12 text-center">
+                <button type="button" class="btn btn-primary" onclick="ValidatePage();">
+                    <i class="fas fa-plus-square"></i>&nbsp;Add
+                </button>
+            </div>
+        </div>
+        <div class="row row-mb-minus10">
+            <div class="col-12">
+                <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">Select Stations to Edit</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divStations');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divStations">
+        <div class="table-responsive" id="tblStations">
+            @{
+                Html.RenderAction("GetAllStations", "Station");
+            }
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    function ValidatePage() {
+        if (ValidateRequired()) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Create","Station")',
+                data: { StationName: $('#StationName').val() },
+                success: function (result) {
+                    $('#StationName').val('');
+                    ShowModalDialog('New Station is added successfully!', 'Successful Creation');
+                    $('#tblStations').load('@Url.Action("GetAllStations","Station")');
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    ShowModalDialog(xhr.responseText, 'Creation failed');
+                }
+            });
+        }
+    }
+
+
+
+    function LoadPage(pagenumber) {
+        ShowLoading();
+        $('#tblStations').load('@Url.Action("GetAllStations", "Station")', { pageno: pagenumber }, function () {
+            HideLoading();
+        });
+    }
+
+    function OnEdit(stationID, stationName) {
+        $('#divEditStations').modal('show');
+        $('#txtUpdateStationName').val('');
+        $('#txtUpdateStationName').data('id', stationID);
+        $('#txtUpdateStationName').val(stationName);
+    }
+    function UpdateStation() {
+        if ($.trim($('#txtUpdateStationName').val()) == '') {
+            ShowError($('#txtUpdateStationName'), 'Please enter the Station Name');
+            return false;
+        }
+
+        $.ajax({
+            url: '@Url.Action("Edit","Station")',
+            type: 'POST',
+            data: { StationId: $('#txtUpdateStationName').data('id'), StationName: $.trim($('#txtUpdateStationName').val()) },
+            success: function (result) {
+                $('#tblStations').load('@Url.Action("GetAllStations", "Station")');
+                ShowModalDialog('Station detail is updated successfully', 'Successful Update');
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                ShowModalDialog(xhr.responseText, 'Update failed');
+            }
+        });
+        $('#divEditStations').modal('hide');
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    }
+
+    function ConfirmDelete() {
+        if ($('#tblStations').find('tr:not(:has(th)) td :checkbox:checked').length == 0) {
+            ShowModalDialog('Please select a station to delete', 'Information');
+            return;
+        }
+
+        var ItemsToDelete = new Array();
+        $('#tblStations').find('tr:not(:has(th)) td :checkbox:checked').each(function () {
+            ItemsToDelete.push($(this).data('id'));
+        });
+
+
+        bootbox.confirm("Are you sure want to delete the selected Station(s)?", function (result) {
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("Delete","Station")',
+                    type: 'POST',
+                    // you can send some additional data along with the request
+                    data: { StationIDs : ItemsToDelete },
+                    //dataType: 'json',
+                    success: function (result) {
+                        $('#tblStations').load('@Url.Action("GetAllStations", "Station")');
+                        ShowModalDialog('The selected Station is removed successfully', 'Successful Delete');
+                    },
+                    error: function (errormessage) {
+                        ShowModalDialog('The delete operation has failed. Please try again later after some time.', 'Delete failed!');
+                    }
+                });
+            }
+        });
+    }
+
+</script>

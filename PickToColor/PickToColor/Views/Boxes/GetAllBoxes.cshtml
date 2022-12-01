@@ -1,0 +1,253 @@
+﻿@model PagedList.IPagedList<PickToColor.Models.BoxesModel>
+ @using PickToColor.Utility;
+@using PickToColor.EntityFramework;
+@using PickToColor.Models;
+@using PagedList.Mvc;
+@{
+    List<CustomerModel> customersList = null;
+    PickToColor.EntityFramework.DataContext context = new PickToColor.EntityFramework.DataContext();
+    customersList = context.Customers.ToList();
+    customersList = customersList ?? new List<CustomerModel>();
+}
+<table class="table table-bordered" id="tblBoxes">
+    <tr class="thead-dark text-light text-center">
+        <th class="text-center"><input type="checkbox" id="chkHeader" class="wh-20" onclick="ToggleCheckBoxes(this);" /></th>
+        <th>
+            Box Type Code
+        </th>
+        <th>
+            Description
+        </th>
+        <th>
+            Total Cubic Metres
+        </th>
+        <th>
+          Customer 
+        </th>  
+        <th>
+           Created On
+        </th>     
+        <th>Actions</th> 
+    </tr>
+@if (Model != null && Model.Any())
+{
+    foreach (var item in Model)
+    {
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='@item.BoxTypeID' onclick="ToggleHeaderCheckBox(this);" /></td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BoxTypeCode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BoxTypeDescription)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalCBM)
+            </td>
+            <td> @customersList.FirstOrDefault(a => a.CustomerID == item.CustomerID).CustomerName</td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedOn)
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(@item.BoxTypeID,'@item.BoxTypeCode','@item.BoxTypeDescription','@item.TotalCBM','@item.CustomerID')">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a> &nbsp;&nbsp;              
+
+            </td>
+        </tr>
+    }
+}
+else
+{
+    <tr>
+        <td colspan="7">
+            <div class="alert alert-dark text-muted text-center">No records found.</div>
+        </td>
+    </tr>
+}
+    @if (Model.PageCount > 0)
+    {
+        <tr>
+            <td colspan="7">
+                <div class="float-left">
+                    <nav>
+                        @Html.PagedListPager(Model, page => string.Format("javascript:LoadPage({0})", page),
+                        new PagedListRenderOptions()
+                        {
+                            UlElementClasses = new List<string> { "pagination", "pagination-sm", "mb-3", "mb-sm-0" },
+                            LiElementClasses = new List<string> { "page-item" },
+                            FunctionToTransformEachPageLink = (li, a) =>
+                            {
+                                a.AddCssClass("page-link");
+                                li.InnerHtml = a.ToString();
+                                return li;
+                            }
+                        })
+                    </nav>
+                </div>
+                <div class="float-right">
+                    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+                </div>
+            </td>
+        </tr>
+    }
+</table>
+<br />
+<div class="modal fade" id="divEditBoxes" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Boxes details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Box Type Code</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateBoxTypeCode" />
+                        <input type="hidden" class="form-control" id="txtBoxTypeID" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Description</label>
+                    <div class="col-sm-8">
+                        <textarea type="text" class="form-control" id="txtUpdateBoxTypeDesc" maxlength="200"></textarea> 
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Total Cubic Metres</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateTotalCBM" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Customer</label>
+                    <div class="col-sm-8">
+                        <select id="ddlCustomerEdit" name="CustomerID" class="form-control" data-message="Select a Customer ID">
+                            <option value="">Choose Customer</option>
+                            @{
+                                DataContext contextEditCus = new DataContext();
+                                //List<BoxesModel> Boxes = contextEditCus.Boxes.Where(a => a.IsActive).ToList();
+                                List<CustomerModel> Customers = contextEditCus.Customers.Where(a => a.IsActive).ToList();
+                                if (Customers != null && Customers.Any())
+                                {
+                                    foreach (CustomerModel customer in Customers)
+                                    {
+                                        <option value='@customer.CustomerID'>@customer.CustomerName</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnModalConfirmOK" onclick="UpdateBoxTypeInfo();">Ok</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+
+    function OnEdit(boxid, boxCode, boxDesc , totalCBM, cusId) {
+
+        $('#divEditBoxes').modal('show');
+        ClearUpdateForm();
+        $('#txtBoxTypeID').val(boxid);
+        $('#txtUpdateBoxTypeCode').val(boxCode);
+        $('#txtUpdateBoxTypeDesc').val(boxDesc);
+        $('#txtUpdateTotalCBM').val(totalCBM);
+        $('#ddlCustomerEdit').val(cusId);
+
+    }
+    function UpdateBoxTypeInfo()
+    {
+        var IsUpdateValid = true;
+        if ($.trim($('#txtUpdateBoxTypeCode').val()) == '') {
+            ShowError($('#txtUpdateBoxTypeCode'), 'Please enter the Box Type Code');
+            IsUpdateValid = false;
+        }
+
+        if ($.trim($('#txtUpdateBoxTypeDesc').val()) == '') {
+            ShowError($('#txtUpdateBoxTypeDesc'), 'Please enter the Box Type Description');
+            IsUpdateValid = false;
+        }
+
+        if ($.trim($('#ddlCustomerEdit').val()) == '') {
+            ShowError($('#ddlCustomerEdit'), 'Please select a Customer');
+            IsUpdateValid = false;
+        }
+
+        if ($.trim($('#txtUpdateTotalCBM').val()) == '' || isNaN($('#txtUpdateTotalCBM').val()))
+        {
+            ShowError($('#txtUpdateTotalCBM'), 'Please enter Total Cubic Metres');
+            IsUpdateValid = false;
+        }
+
+        if(!IsUpdateValid) return false;
+
+        $.ajax({
+            url: '@Url.Action("Edit","Boxes")',
+            type: 'POST',
+            data: { BoxTypeID: $.trim($('#txtBoxTypeID').val()), BoxTypeCode: $.trim($('#txtUpdateBoxTypeCode').val()), BoxTypeDescription: $.trim($('#txtUpdateBoxTypeDesc').val()), TotalCBM: $.trim($('#txtUpdateTotalCBM').val()), CustomerID: $.trim($('#ddlCustomerEdit').val()) },
+            success: function (result) {
+                $('#tblBoxes').load('@Url.Action("GetAllBoxes", "Boxes")');
+                ShowModalDialog('The Box details are updated successfully', 'Successful Update');
+            },
+            error: function (A,B,C) {
+
+                ShowModalDialog('The Box detail update has failed. Please try again later after some time.', 'Box details update failed!');
+            }
+        });
+        $('#divEditBoxes').modal('hide');
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    }
+
+
+    function ClearUpdateForm() {
+        $('#txtUpdateCustomerCode').val('');
+        $('#txtUpdateCustomerName').val('');
+        $('#txtUpdateDescription').val('');
+        $('#ddlBoxes').val('');
+    }
+    function LoadPage(pagenumber) {
+        ShowLoading();
+        //PageNumber = pagenumber;
+        $('#tblBoxes').load('@Url.Action("GetAllBoxes", "Boxes")', { pageno: pagenumber }, function () {
+            HideLoading();
+        });
+    }
+        function ConfirmDelete() {
+            if ($('#tblBoxes').find('tr:not(:has(th)) td :checkbox.child-item:checked').length == 0) {
+                ShowModalDialog('Please select a Box to delete', 'Information');
+                return;
+            }
+
+            var ItemsToDelete = new Array();
+            $('#tblBoxes').find('tr:not(:has(th)) td :checkbox.child-item:checked').each(function () {
+                ItemsToDelete.push($(this).data('id'));
+            });
+            bootbox.confirm("Are you sure want to delete the selected Box(s)?", function (result) {
+                if (result) {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Boxes")',
+                        type: 'POST',
+                        data: { BoxIDs: ItemsToDelete },
+                        success: function (result) {
+                            $('#tblBoxes').load('@Url.Action("GetAllBoxes", "Boxes")', { pageno: 1 });
+                            ShowModalDialog('The selected Box(s) is removed successfully', 'Successful Delete');
+                        },
+                        error: function (errormessage) {
+                            ShowModalDialog('The delete operation has failed. Please try again later after some time.', 'Delete failed!');
+                        }
+                    });
+                }
+            });
+        }
+    </script>

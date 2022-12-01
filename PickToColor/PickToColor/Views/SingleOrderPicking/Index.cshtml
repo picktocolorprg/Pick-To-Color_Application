@@ -1,0 +1,813 @@
+﻿@using System.Web.Optimization
+@{
+    ViewBag.Title = "Single Order Picking | Pick To Color System | Bollore Logistics";
+}
+
+@using PickToColor.Models;
+@{
+    UserModel CurrentUser = null;
+
+    if (Session[PickToColor.Utility.KeyConstants.CurrentUser] == null && Context.User != null && Context.User.Identity != null && Context.User.Identity.IsAuthenticated)
+    {
+        CurrentUser = (new PickToColor.Utility.SecurityLayer()).ReturnCurrentUser();
+        Session[PickToColor.Utility.KeyConstants.CurrentUser] = CurrentUser;
+    }
+    CurrentUser = Session[PickToColor.Utility.KeyConstants.CurrentUser] as UserModel;
+
+}
+
+@section PickColorJS
+{
+    @Scripts.Render("~/bundles/progbarJS")
+
+}
+
+<div class="Picking-Container">
+    <div class="row">
+        <div class="col-12 col-md-10 mx-0 my-0 pl-3 pr-0 py-0">
+            <div class="Picking-Header border-bottom row px-1 py-2 mx-0 my-0 bg-light text-dark">
+                <div class="col-12 col-md-6">
+                    <span class="highlight"><i class="fas fa-location-arrow"></i> Station :</span>
+                    @{
+                        PickToColor.Models.StationModel CurrentStation = Session[PickToColor.Utility.KeyConstants.CurrentStation] as PickToColor.Models.StationModel;
+                        if (CurrentStation != null)
+                        {
+                            <span id="lblStationID" class="highlight-values" data-stationid='@CurrentStation.StationID'>@CurrentStation.StationName</span>
+                        }
+                    }
+
+                </div>
+                <div class="col-12 col-md-5">
+                    <span class="highlight"><i class="fas fa-cart-plus"></i> Order : </span><span id="lblOrderNo" class="highlight-values"></span>
+                </div>
+                <div class="col-12 col-md-1 text-right">
+                    <a class="btn btn-primary text-white btn-lg" title="expand" onclick="ToggleExpand();" id="anchorExpandCollapse"><i class="fas fa-expand"></i></a>
+                </div>
+            </div>
+            <div class="Picking-Content"></div>
+            @*<input type="text" id="fakeSKU" name="fakeSKU">*@
+            <div class="Picking-Notifier d-none">SERIAL NUMBER SCANNING REQUIRED ADDITIONALLY</div>
+            <div class="Picking-Footer row px-1 py-2 mx-0 my-0 border-top bg-light text-dark">
+                <div class="col-12 col-sm-4">
+                    <span class="highlight"><i class="fas fa-cubes"></i> SKU :</span><span id="lblSKU" class="highlight-values"></span>
+                </div>
+                <div class="col-12 col-sm-4">
+                    <span class="highlight" title="Associated Picking Qty "><i class="fas fa-th"></i> Total SKUs : </span><span id="lblAssociatePickingQty" class="highlight-values"></span>
+                </div>
+                <div class="col-12 col-sm-4">
+                    <div class="progress progress-striped Progress-Bar-height" id="divProgressBar">
+                        <div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="0"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="Picking-Footer row px-1 py-2 mx-0 my-0 border-top bg-light text-dark">
+                <div class="col-12 col-sm-4">
+                    <span class="highlight"><i class="fas fa-list-alt"></i> Rem. SKUs: </span><span id="lblRemSKU" class="highlight-values"></span>
+                </div>
+                <div class="col-12 col-sm-4">
+                    <span class="highlight"><i class="fas fa-calendar-alt"></i> Date : </span><span id="lblDate" class="highlight-values">@DateTime.Now.ToString("dd-MM-yy")</span>
+                </div>
+                <div class="col-12 col-sm-3">
+                    <span class="highlight"><i class="fas fa-clock"></i>  Time : </span><span id="lblTime" class="highlight-values highlight-values-sm"></span>
+                </div>
+                <div class="col-12 col-sm-1 text-right">
+                    <a class="btn btn-lg btn-danger text-light" onclick="CancelPicking();" title="Cancel Picking">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-2 bg-white bg-white border px-0">
+            <section class="fill-height-or-more">
+                <div class="text-center border-bottom">
+                    <span class="highlight">Customer</span><span id="lblCustomer" class="highlight-values"></span>
+                </div>
+                <div class="text-center border-bottom Picking-Left-Operator">
+                    <span class="highlight">Operator</span>
+                    @if (string.IsNullOrEmpty(CurrentUser.ImagePath))
+                    {
+                        <i class="fas fa-user-circle wh-64 text-light"></i>
+                    }
+                    else
+                    {
+                        <img src='@Href("~"+CurrentUser.ImagePath)' class="wh-150 mx-auto px-1 border py-1 rounded-circle">
+                    }
+
+                    <span class="highlight-values">@CurrentUser.Name</span>
+                </div>
+                <div class="text-center border-bottom">
+                    <span class="highlight">Box Type:</span>
+                    <span class="highlight-values" id="lblBoxType"></span>
+                </div>
+                @*<div class="text-center">
+                    <span class="highlight">Type:</span>
+                    <span class="highlight-values" id="lblOrderType"></span><br />
+                    <sub id="lblOrderTypeSubMixInfo" class="d-none highlight-values">WH SKUs are Skipped</sub>
+                </div>*@
+            </section>
+        </div>
+    </div>
+
+</div>
+<div id="divScanOrder" class="Scan-Order">
+    <div class="row mb-3" style="min-width: 500px;">
+        <div class="col-12 text-center">
+            <strong class="display-4">Scan the order to begin</strong><br /><br />
+            <input type="text" id="txtOrderNumber" class="highlight form-control full-width-input " />
+            <input type="checkbox" id="chkExpandedMode" checked="checked" class="wh-30 my-3" />
+            <label for="chkExpandedMode" class="display-4 f-size-30">Start in Full Screen</label>
+        </div>
+    </div>
+    <div class="row" style="min-width:500px;">
+        <div class="col-12" id="divOrderErrorMessage"></div>
+    </div>
+</div>
+<div id="divAudioControls">
+
+</div>
+<div id="divNotificationAudios" class="d-none">
+    <audio id="AudSKU" src="~/Audio/Resources/SKU.WAV" />
+    <audio id="AudSerial" src="~/Audio/Resources/SERIAL.WAV" />
+    <audio id="AudError" src="~/Audio/Resources/ERROR.wav" />
+    <audio id="AudComplete" src="~/Audio/Resources/SUCCESS.wav" />
+</div>
+
+@section ExecutableScripts{
+    <script>
+        let StartTime;
+        let IsOneScanningEnabled = false;
+        $(document).ready(function () {
+            $('body, html').addClass('Picking-Body-Html');
+            $('body').css('overflow', 'hidden').addClass('pb-0');
+            $('div.container').addClass('Picking-Enc-Container');
+            $('div.Picking-Enc-Container').children('br').remove();
+            SetSizes();
+            $(window).resize(function () {
+                SetSizes();
+            });
+            if (localStorage.getItem('ExpandPreference') != null && localStorage.getItem('ExpandPreference') == "false") {
+                $('#chkExpandedMode').prop('checked', false);
+            }
+            $('#txtOrderNumber').focus();
+
+            $("#txtOrderNumber").keypress(function (event) {
+                if (event.which == 13) {
+                    $('#divOrderErrorMessage').html('');
+                    let orderCD = $("#txtOrderNumber").val();
+                    $("#txtOrderNumber").val('');
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("CheckForCancelledPicking","SingleOrderPicking")',
+                        data: {
+                            OrderCD: orderCD,
+                            StationID: parseInt($('#lblStationID').data('stationid'))
+                        },
+                        success: function () {
+                            StartPicking(orderCD);
+                        },
+                        error: function (xhr, requestcode, errormessage) {
+                            ShowInfoAlertOnScreen('#divOrderErrorMessage', xhr.responseText, 'Order cannot be processed', 'alert-danger');
+                            PlayErrorSound();
+                        }
+                    });
+                }
+            });
+        });
+
+
+    </script>
+}
+<script>
+
+    function StartPicking(orderCD) {
+        $.ajax({
+            type: 'post',
+            url: '@Url.Action("GetOrderDetails","SingleorderPicking")',
+            data: {
+                OrderCD: orderCD,
+                StationID: parseInt($('#lblStationID').data('stationid'))
+            },
+            success: function (result) {
+                localStorage.setItem('ExpandPreference', $('#chkExpandedMode').prop('checked'));
+                if (localStorage.getItem('ExpandPreference') == "true") {
+                    ToggleExpand();
+                }
+                StartTime = new Date();
+                ShowTime();
+                $('body').css('overflow', 'auto');
+                $('#divScanOrder').addClass('d-none');
+                $(document).on('keypress', function (event) {
+                    HandleSKUInput(event);
+                });
+                LoadResults(result);
+                $('body').focus();
+            },
+            error: function (xhr, requestcode, errormessage) {
+                ShowInfoAlertOnScreen('#divOrderErrorMessage', xhr.responseText, 'Order cannot be processed', 'alert-danger');
+                PlayErrorSound();
+            }
+        });
+    }
+
+    let TimerID;
+    // Utility Methods - Start
+    function SetSizes() {
+        let DivToReferForHeight = $('#anchorExpandCollapse').find('svg.fa-expand').length > 0 ? 'div.Picking-Enc-Container' : 'div.Picking-Container';
+        let AvailableHeight = $(DivToReferForHeight).outerHeight() - ($('div.Picking-Header').outerHeight() + 2 * $('div.Picking-Footer').outerHeight() + 40 + 18 + 20);
+        if ($('div.notification').length > 0) //When the notification is being displayed then we need to include that height in calculating the space.
+            AvailableHeight = AvailableHeight - 60;
+        $('div.Picking-Content').height(AvailableHeight);
+        $('div.Picking-Content').css('line-height', AvailableHeight.toString() + 'px');
+        $('div.Picking-Content').css('font-size', (AvailableHeight / 1.5).toString() + 'px');
+    }
+
+    function ShowTime(stopTime) {
+        let CurrentTime = new Date();
+        let ElapsedSeconds = parseInt((CurrentTime - StartTime) / 1000);
+        $('#lblTime').text(ElapsedSeconds.toString() + ' s');
+        if (stopTime != undefined && stopTime != null && stopTime == true) {
+            $('#lblTime').text('');
+            clearTimeout(TimerID);
+        }
+        else
+            TimerID = setTimeout(ShowTime, 1000);
+    }
+
+    function ToggleExpand() {
+        if ($('#anchorExpandCollapse').find('svg.fa-expand').length > 0) //Current display is in compressed(normal) form - Make it full screen
+        {
+            $('div.Picking-Container').addClass('full-screen');
+            $('#anchorExpandCollapse').find('svg.fa-expand').removeClass('fa-expand').addClass('fa-compress');
+            $('#anchorExpandCollapse').attr('title', 'Collpase');
+        }
+        else {
+            $('div.Picking-Container').removeClass('full-screen');
+            $('div.Picking-Content').height(10); //reset height before recalculating
+            $('#anchorExpandCollapse').find('svg.fa-compress').removeClass('fa-compress').addClass('fa-expand');
+            $('#anchorExpandCollapse').attr('title', 'Expand');
+        }
+        setTimeout(function () { SetSizes(); }, 100);
+    }
+    //Utility Methods - End
+
+
+    let CurrentItemIndex = 0;
+    let OrderDetails;
+    let ExpectedBarcodeNumber = '';
+    let IsCheckSN = false;
+    let IsCorrectSKUScanned = false;
+    let TotalCartItems = 0;
+    let NumberOfScansRequired = 0;
+    let CurrentScanIndex = 0;
+    function LoadResults(result) {
+        OrderDetails = JSON.parse(result);
+        SavePicking(OrderDetails);
+        IsOneScanningEnabled = OrderDetails.OneScanningEnabled;
+        TotalCartItems = OrderDetails.TotalCartItem;
+        //refer to OrderDetails.cs class in BO folder for below format
+        $('#lblOrderNo').text(OrderDetails.OrderCD);
+        $('#lblRemSKU').text(OrderDetails.OrderedItems.length.toString());
+        $('#lblCustomer').text(OrderDetails.CustomerName);
+        $('#lblOrderType').text(OrderDetails.OrderType);
+
+        if (OrderDetails.BoxTypeName != '')
+            $('#lblBoxType').text(OrderDetails.BoxTypeName);
+        else {
+            $('#lblBoxType').parent('div').addClass('bg-danger');
+            $('#lblBoxType').text('No Box Type');
+        }
+
+        if ($('#lblOrderType').text() == 'MIX') {
+
+        }
+        else {
+
+        }
+
+        let AudioToDownload = [];
+        for (let i = 0; i < OrderDetails.OrderedItems.length; i++) {
+            if ($.inArray(OrderDetails.OrderedItems[i].LocationSoundFile, AudioToDownload) == -1) {
+                AudioToDownload.push(OrderDetails.OrderedItems[i].LocationSoundFile);
+            }
+
+            if ($.inArray(OrderDetails.OrderedItems[i].ColorSoundFile, AudioToDownload) == -1) {
+                AudioToDownload.push(OrderDetails.OrderedItems[i].ColorSoundFile);
+            }
+        }
+        for (let aud = 0; aud < AudioToDownload.length ; aud++) {
+            $("<audio></audio>").attr({
+                'src': AudioToDownload[aud],
+                'data-id': aud
+            }).appendTo("#divAudioControls");
+        }
+        ShowFirstItem();
+    }
+
+    function ShowFirstItem() {
+        CurrentItemIndex = OrderDetails.ResumeItemIndex;
+        if (CurrentItemIndex != 0) {
+            ShowBottomNotification('Order Picking Resumed', 'bg-danger');
+            PlayErrorSound();
+        }
+
+        let CurrentItem = OrderDetails.OrderedItems[CurrentItemIndex];
+        ShowContent(CurrentItem.LocationCode, CurrentItem.OrderQty, CurrentItem.FontColorCode, CurrentItem.BackgroundColorCode, OrderDetails.TotalQuantity, CurrentItem.SKU);
+        ExpectedBarcodeNumber = CurrentItem.Barcode;
+        IsCheckSN = CurrentItem.CheckSN
+        //$('#divAudioControls audio[src="' + CurrentItem.LocationSoundFile + '"]').trigger('play').on('ended', function () {
+        //    $('#divAudioControls audio[src="' + CurrentItem.ColorSoundFile + '"]').trigger('play');
+        //});
+        $('#divAudioControls audio[src="' + CurrentItem.ColorSoundFile + '"]').trigger('play').on('ended', function () {
+            $('#divAudioControls audio[src="' + CurrentItem.LocationSoundFile + '"]').trigger('play');
+        });
+        if (CurrentItem.CheckSN) {
+            $('div.Picking-Notifier').removeClass('d-none');
+            $('div.Picking-Content').css('border-bottom', '40px solid black');
+        }
+
+        $('.progress-bar').attr('aria-valuemin', 0).attr('aria-valuemax', TotalCartItems);
+        $('.progress-bar').attr('data-transitiongoal', CurrentItemIndex);
+        $('.progress .progress-bar').progressbar({ display_text: 'fill' });
+        NumberOfScansRequired = parseInt(OrderDetails.OrderedItems[CurrentItemIndex].OrderQty / OrderDetails.OrderedItems[CurrentItemIndex].AssociatedPickingQty);
+        CurrentScanIndex = 0;
+    }
+
+    function ShowNextItem() {
+        HideBottomNotification();
+        CurrentItemIndex++;
+        if (OrderDetails.OrderedItems.length > CurrentItemIndex) {
+            let CurrentItem = OrderDetails.OrderedItems[CurrentItemIndex];
+
+            if (CurrentItem.CheckSN) {
+                $('div.Picking-Notifier').removeClass('d-none');
+                $('div.Picking-Content').css('border-bottom', '40px solid black');
+            }
+            else {
+                $('div.Picking-Notifier').addClass('d-none');
+                $('div.Picking-Content').css('border-bottom', '0px');
+            }
+
+            ShowContent(CurrentItem.LocationCode, CurrentItem.OrderQty, CurrentItem.FontColorCode, CurrentItem.BackgroundColorCode, OrderDetails.TotalQuantity, CurrentItem.SKU);
+            ExpectedBarcodeNumber = CurrentItem.Barcode;
+            IsCheckSN = CurrentItem.CheckSN;
+            //$('#divAudioControls audio[src="' + CurrentItem.LocationSoundFile + '"]').trigger('play').on('ended', function () {
+              //  $('#divAudioControls audio[src="' + CurrentItem.ColorSoundFile + '"]').trigger('play');
+            //});
+            $('#divAudioControls audio[src="' + CurrentItem.ColorSoundFile + '"]').trigger('play').on('ended', function () {
+                $('#divAudioControls audio[src="' + CurrentItem.LocationSoundFile + '"]').trigger('play');
+            });
+            NumberOfScansRequired = parseInt(OrderDetails.OrderedItems[CurrentItemIndex].OrderQty / OrderDetails.OrderedItems[CurrentItemIndex].AssociatedPickingQty);
+            CurrentScanIndex = 0;
+        }
+        else {
+            $('div.Picking-Content').addClass('bg-success').css('color', 'white').html('');
+            let lineheightvalue = $('div.Picking-Content').height() / 4;
+            $('div.Picking-Content').html($('<div></div>').addClass('success-message').css('font-size', lineheightvalue.toString() + 'px').css('line-height', lineheightvalue.toString() + 'px').append($('<i></i>').addClass('fas fa-check-circle').add($('<div>Order Completed</div>'))));
+            PlayCompleteSound();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("PickingComplete","SingleOrderPicking")',
+                data: { PickingID: CurrentPickingID, PickingEndTime: (new Date()).toISOString(), OrderCD: $('#lblOrderNo').text() },
+                error: function (xhr, statuscode, response) {
+                    ShowBottomNotification(xhr.responseText, 'bg-danger');
+                    PlayErrorSound();
+                }
+            });
+
+
+            $('.progress-bar').attr('data-transitiongoal', CurrentItemIndex);
+            $('.progress .progress-bar').progressbar({ display_text: 'fill' });
+            if ($('#lblOrderType').text() == "MIX") {
+                ShowFullScreenNotify("Mixed order to be completed : " + OrderDetails.WarehouseSKUs.join(' , '));
+            }
+            setTimeout(function () {
+                HideBottomNotification(); TakeNewOrder();
+            }, 3000);
+
+
+        }
+    }
+
+    function ShowContent(loccode, ordqty, forecolor, backcolor, qty, sku) {
+        $('div.Picking-Content').text(loccode + ' ' + ordqty.toString());
+        $('div.Picking-Content').css('color', forecolor);
+        $('div.Picking-Content').css('background-color', backcolor);
+
+        $('.progress-bar').attr('data-transitiongoal', CurrentItemIndex);
+        $('.progress .progress-bar').progressbar({ display_text: 'fill' });
+
+        $('#lblAssociatePickingQty').text(qty);
+        $('#lblSKU').text(sku);
+    }
+
+    function TakeNewOrder() {
+        $('body').css('overflow', 'hidden');
+        $('#divScanOrder').removeClass('d-none');
+        $('div.Picking-Content').html('').removeClass('bg-success');
+        if ($('#anchorExpandCollapse').find('svg.fa-expand').length <= 0) {
+            ToggleExpand();
+        }
+        $('div.Picking-Content').css('color', '').css('background-color', '');
+        ClearDisplayContent();
+        $('div.Picking-Notifier').addClass('d-none');
+        $('div.Picking-Content').css('border-bottom', '0px');
+        ShowTime(true);
+        $("#divAudioControls audio").remove();
+        $(document).off('keypress');
+        setTimeout(function () { $('#txtOrderNumber').focus(); }, 500);
+    }
+
+    function ClearDisplayContent() {
+        $('div.Picking-Content').html('');
+        $('#lblOrderNo').text('');
+        $('#lblRemSKU').text('');
+        $('#lblCustomer').text('');
+        $('#lblOrderType').text('');
+        $('#lblBoxType').text('');
+        $('#lblSKU').text('');
+        $('#lblAssociatePickingQty').text('');
+        $('.progress-bar').attr('data-transitiongoal', 0);
+        $('#lblBoxType').parent('div').removeClass('bg-danger');
+        $('.progress .progress-bar').progressbar({ display_text: 'fill' });
+        CurrentItemIndex = 0;
+        OrderDetails = null;
+        ExpectedBarcodeNumber = '';
+        IsCheckSN = false;
+        IsCorrectSKUScanned = false;
+        TotalCartItems = 0;
+        CurrentPickedItem.PickingID = 0;
+        CurrentPickedItem.ProductID = 0;
+        CurrentPickedItem.SerialNo = '';
+        CurrentPickedItem.ScannedOn = '';
+        CurrentPickingID = 0;
+        IsOneScanningEnabled = false;
+        NumberOfScansRequired = 0;
+        CurrentScanIndex = 0;
+    }
+
+
+    // Scanning and Picking Event Handlers - Start
+    function HandleSKUInput(evt) {
+        if (evt.which == 13) {
+
+            let PickedSKUorSN = $('body').data('SKU');
+            //let PickedSKUorSN = $("#fakeSKU").val();
+            $('body').data('SKU', '');
+            
+            //When One Scanning is disabled - One scan of item equals to entire qty
+            if (!IsOneScanningEnabled) {
+                if (IsCheckSN) {
+                    if (!IsCorrectSKUScanned) {
+                        CheckPickedSKU(PickedSKUorSN);
+                    }
+                    else {
+                        if (PickedSKUorSN == ExpectedBarcodeNumber || PickedSKUorSN == OrderDetails.OrderCD)
+                        {
+                            ShowBottomNotification("Invalid Serial Number", 'bg-danger');
+                            PlayErrorSound();
+                        }
+                        else
+                        {
+                            //ProcessSerialNumber(PickedSKUorSN);
+                        }
+                    }
+                }
+                else {
+                    CheckPickedSKU(PickedSKUorSN);
+                }
+            }
+            else {
+                //When One Scanning is enabled - One scan of item equals to associated Picking qty amount of item.
+                if (IsCheckSN) {
+                    //When the item has Check SN enabled
+                    if (!IsCorrectSKUScanned) {
+                        CheckPickedSKUOneScan(PickedSKUorSN);
+                    }
+                    else {
+                        if (PickedSKUorSN == ExpectedBarcodeNumber || PickedSKUorSN == OrderDetails.OrderCD) {
+                            ShowBottomNotification("Invalid Serial Number", 'bg-danger');
+                            PlayErrorSound();
+                        }
+                        else {
+                            ProcessSerialNumberOneScan(PickedSKUorSN);
+                        }
+                    }
+                }
+                else {
+                    //When the item has Check SN disabled
+                    CheckPickedSKUOneScan(PickedSKUorSN);
+                }
+            }
+        }
+        else {
+            $('body').data('SKU', ($('body').data('SKU') != undefined ? $('body').data('SKU') : '') + evt.key);
+        }
+    }
+
+
+    let CurrentPickedItem = {
+        PickingID: 0,
+        ProductID: 0,
+        SerialNo: '',
+        ScannedOn: ''
+    };
+    function CheckPickedSKU(skuval) {
+        if (ExpectedBarcodeNumber == skuval) {
+            if (CurrentScanIndex < NumberOfScansRequired) {
+                //correct item picked
+                CurrentPickedItem.PickingID = CurrentPickingID;
+                CurrentPickedItem.ScannedOn = (new Date()).toISOString();
+                CurrentPickedItem.ProductID = $.grep(OrderDetails.OrderedItems, function (e) { return e.Barcode === skuval; })[0].ProductID;
+                //If SN not required then update the current picked item to db
+                if (!IsCheckSN) {
+                    CurrentPickedItem.SerialNo = '';
+                    $.ajax({
+                        url: '@Url.Action("SavePickingItem","SingleOrderPicking")',
+                        data: CurrentPickedItem,
+                        type: 'POST',
+                        error: function (xhr, statuscode, response) {
+                            ShowBottomNotification(xhr.responseText, 'bg-danger');
+                            PlayErrorSound();
+                        },
+                        success: function () {
+                            CurrentScanIndex++;
+                            IsCorrectSKUScanned = false;
+                            if (CurrentScanIndex == NumberOfScansRequired) {
+                                ShowNextItem();
+                                $('#lblRemSKU').text(OrderDetails.OrderedItems.length - CurrentItemIndex);
+                            }
+                            else {
+                                ShowBottomNotification('Please scan the SKU Barcode Number for item ' + (CurrentScanIndex + 1).toString() + ' of ' + NumberOfScansRequired, 'bg-danger');
+                                PlaySKUSound();
+                            }
+                        }
+                    });
+                }
+                    //If SN required then wait for SN to be scanned and then
+                else {
+                    IsCorrectSKUScanned = true;
+                    ShowBottomNotification('Please scan the Serial Number for item ' + (CurrentScanIndex + 1).toString() + ' of ' + NumberOfScansRequired, 'bg-success');
+                    PlaySerialSound();
+                }
+            }
+        }
+        else {
+            alert(skuval)
+            ShowSKUWrongPickError();
+            setTimeout(function () {
+                $('div.Picking-Content').removeClass('bg-danger');
+                let tempVar = CurrentScanIndex;
+                CurrentItemIndex--;
+                ShowNextItem();
+                CurrentScanIndex = tempVar;
+            }, 1500);
+        }
+    }
+
+
+    @*function ProcessSerialNumber(serialnoval) {
+        if (CurrentScanIndex < NumberOfScansRequired) {
+            //Process the serial number
+            CurrentPickedItem.SerialNo = serialnoval;
+            CurrentPickedItem.ScannedOn = (new Date()).toISOString();
+            $.ajax({
+                url: '@Url.Action("SavePickingItem","SingleOrderPicking")',
+                type: 'POST',
+                data: CurrentPickedItem,
+                error: function (xhr, statuscode, response) {
+                    ShowBottomNotification(xhr.responseText, 'bg-danger');
+                    PlayErrorSound();
+                },
+                success: function () {
+                    CurrentScanIndex++;
+                    //if (!IsOneScanningEnabled)
+                    IsCorrectSKUScanned = false;
+                    if (CurrentScanIndex == NumberOfScansRequired) {
+                        IsCheckSN = false;
+                        ShowNextItem();
+                        $('#lblRemSKU').text(OrderDetails.OrderedItems.length - CurrentItemIndex);
+                    }
+                    else {
+                        let NextScanItemText;
+                        if (IsOneScanningEnabled) {
+                            NextScanItemText = " Serial Number ";
+                            PlaySerialSound();
+                        }
+                        else {
+                            NextScanItemText = " SKU Barcode Number "
+                            PlaySKUSound();
+                        }
+
+                        ShowBottomNotification('Please scan the' + NextScanItemText + 'for item ' + (CurrentScanIndex + 1).toString() + ' of ' + NumberOfScansRequired, 'bg-danger');
+                        PlayErrorSound();
+
+                    }
+                }
+            });
+        }
+    }*@
+
+
+    function CheckPickedSKUOneScan(skuBarcode) {
+        if (ExpectedBarcodeNumber == skuBarcode) {
+
+            //correct item picked
+            CurrentPickedItem.PickingID = CurrentPickingID;
+            CurrentPickedItem.ScannedOn = (new Date()).toISOString();
+            CurrentPickedItem.ProductID = $.grep(OrderDetails.OrderedItems, function (e) { return e.Barcode === skuBarcode; })[0].ProductID;
+            //If SN is required pass this to execution. In the next barcode Scan the execution goes to SerialNoScannedOneScan method
+            //where it will be saved to database and then the CurrentScanIndex will be incremented
+            if (IsCheckSN) {
+                IsCorrectSKUScanned = true;
+                ShowBottomNotification('Please scan the Serial Number for item ' + (CurrentScanIndex + 1).toString() + ' of ' + NumberOfScansRequired,'bg-success');
+                PlaySerialSound();
+            }
+                //If SN is not required, Save this to database and increment the CurrentScanIndex value
+            else {
+                CurrentPickedItem.SerialNo = '';
+                $.ajax({
+                    url: '@Url.Action("SavePickingItem","SingleOrderPicking")',
+                    data: CurrentPickedItem,
+                    type: 'POST',
+                    error: function (xhr, statuscode, response) {
+                        ShowBottomNotification(xhr.responseText, 'bg-danger');
+                        PlayErrorSound();
+                    }
+                });
+                CurrentScanIndex = NumberOfScansRequired;
+                IsCorrectSKUScanned = false;
+
+                if (CurrentScanIndex == NumberOfScansRequired) {
+                    ShowNextItem();
+                    $('#lblRemSKU').text(OrderDetails.OrderedItems.length - CurrentItemIndex);
+                }
+            }
+
+        }
+        else {
+            ShowSKUWrongPickError();
+            //wrong item picked
+            setTimeout(function () {
+                $('div.Picking-Content').removeClass('bg-danger');
+                let tempVar = CurrentScanIndex;
+                CurrentItemIndex--;
+                ShowNextItem();
+                CurrentScanIndex = tempVar;
+            }, 1500);
+        }
+    }
+
+
+    function ProcessSerialNumberOneScan(serialnovalue) {
+        if (CurrentScanIndex < NumberOfScansRequired) {
+            //Process the serial number
+            CurrentPickedItem.SerialNo = serialnovalue;
+            CurrentPickedItem.ScannedOn = (new Date()).toISOString();
+            $.ajax({
+                url: '@Url.Action("SavePickingItem","SingleOrderPicking")',
+                type: 'POST',
+                data: CurrentPickedItem,
+                error: function (xhr, statuscode, response) {
+                    ShowBottomNotification(xhr.responseText, 'bg-danger');
+                    PlayErrorSound();
+                },
+                success: function () {
+                    CurrentScanIndex++;
+                    //if (!IsOneScanningEnabled)
+                    //    IsCorrectSKUScanned = false;
+                    if (CurrentScanIndex == NumberOfScansRequired) {
+                        IsCheckSN = false;
+                        IsCorrectSKUScanned = false;
+                        ShowNextItem();
+                        $('#lblRemSKU').text(OrderDetails.OrderedItems.length - CurrentItemIndex);
+                    }
+                    else {
+                        let NextScanItemText;
+                        if (IsOneScanningEnabled) {
+                            NextScanItemText = " Serial Number ";
+                            PlaySerialSound();
+                        }
+                        else {
+                            NextScanItemText = " SKU Barcode Number "
+                            PlaySKUSound();
+                        }
+                        ShowBottomNotification('Please scan the' + NextScanItemText + 'for item ' + (CurrentScanIndex + 1).toString() + ' of ' + NumberOfScansRequired, 'bg-danger');
+                    }
+                }
+            });
+        }
+    }
+
+
+
+    let CurrentPickingID = 0;
+    function SavePicking(orderDetail) {
+        if (orderDetail.PickingID != null && orderDetail.PickingID != '') {
+            //Go to the item to be picked - Resume Picking Operation
+            CurrentPickingID = orderDetail.PickingID;
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("StartOrderPicking", "SingleOrderPicking")',
+                data: { OrderCD: orderDetail.OrderCD, BoxTypeID: orderDetail.BoxTypeID==null || orderDetail.BoxTypeID==undefined ? 0:orderDetail.BoxTypeID, PickingStartTime: (new Date()).toISOString() },
+                success: function (result) {
+                    CurrentPickingID = result;
+                },
+                error: function (xhr, statusCode, response) {
+                    ShowModalDialog(xhr.responseText, 'Could not save picking progress');
+                    PlayErrorSound();
+                }
+            });
+        }
+    }
+    //Scanning and Picking Event Handlers - End
+    function ShowSKUWrongPickError() {
+        //$('div.Picking-Content').addClass('bg-danger');
+        //$('div.Picking-Content').css('color', 'white');
+        //$('div.Picking-Content').html('');
+        //let lineheightvalue = $('div.Picking-Content').height() / 10;
+        //$('div.Picking-Content').html($('<div></div>').addClass('success-message').css('font-size', lineheightvalue.toString() + 'px').css('line-height', lineheightvalue.toString() + 'px').css('display', 'inline-block').append($('<i></i>').addClass('fas fa-times').add($('<div>Wrong SKU Scanned. Please check and try again</div>'))));
+        ShowFullScreenErrorNotify('Wrong SKU scanned. Please check and verify again.');
+        PlayErrorSound();
+        setTimeout(function () { HideBottomNotification(); }, 1500);
+
+    }
+
+    function CancelPicking() {
+        let WasExpanded = false;
+        if ($('svg.fa-compress').is(':visible')) {
+            WasExpanded = true;
+            ToggleExpand();
+        }
+        HideBottomNotification();
+        bootbox.confirm("Are you sure want to cancel the picking?", function (result) {
+            if (result) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("CancelPicking","SingleOrderPicking")',
+                    data: { PickingID: CurrentPickingID },
+                    success: function () {
+                        TakeNewOrder();
+                    },
+                    error: function (xhr, statuscode, response) {
+                        ShowBottomNotification(xhr.responseText, 'bg-danger');
+                        PlayErrorSound();
+                    }
+                });
+            }
+            else if (WasExpanded) {
+                ToggleExpand();
+            }
+        });
+    }
+
+    let SKUSoundExists = false;
+    function PlaySKUSound() {
+        if (!SKUSoundExists) {
+            $.get($('#AudSKU').attr('src')).done(function () {
+                $('#AudSKU').trigger('play');
+                SKUSoundExists = true;
+            });
+        }
+        else
+            $('#AudSKU').trigger('play');
+    }
+
+    let SerialSoundExists = false;
+    function PlaySerialSound() {
+        if (!SerialSoundExists) {
+            $.get($('#AudSerial').attr('src')).done(function () {
+                $('#AudSerial').trigger('play');
+                SerialSoundExists = true;
+            });
+        }
+        else
+            $('#AudSerial').trigger('play');
+    }
+
+    let ErrorSoundExists = false;
+    function PlayErrorSound() {
+        if (!ErrorSoundExists) {
+            $.get($('#AudError').attr('src')).done(function () {
+                $('#AudError').trigger('play');
+                SerialSoundExists = true;
+            });
+        }
+        else
+            $('#AudError').trigger('play');
+    }
+
+    let CompleteSoundExists = false;
+    function PlayCompleteSound() {
+        if (!CompleteSoundExists) {
+            $.get($('#AudComplete').attr('src')).done(function () {
+                $('#AudComplete').trigger('play');
+                SerialSoundExists = true;
+            });
+        }
+        else
+            $('#AudComplete').trigger('play');
+    }
+    
+</script>

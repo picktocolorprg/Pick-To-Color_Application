@@ -1,0 +1,96 @@
+﻿@model PagedList.IPagedList<PickToColor.Models.StationModel>
+@using PagedList.Mvc;
+<table class="table table-bordered">
+    <tr class="thead-dark text-light text-center">
+        <th class="mw-100 text-center"><input type="checkbox" id="chkHeader" class="wh-20" onclick="ToggleCheckBoxes(this);" /></th>
+        <th>
+            Station Name
+        </th>
+        <th>Actions</th>
+    </tr>
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            <tr>
+                <td class="mw-100 text-center"><input type="checkbox" data-id="@item.StationID" id="chkHeader" class="child-item wh-20" onclick="ToggleHeaderCheckBox(this);" /></td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StationName)
+                </td>
+                <td class="text-center mw-100">
+                    <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(@item.StationID,'@HttpUtility.JavaScriptStringEncode(item.StationName)')"><i class="fas fa-pencil-alt"></i> Edit</a>
+                </td>
+            </tr>
+        }
+        <tr>
+            <td colspan="3" class="text-center">
+                <a class="btn btn-danger mt-3 mt-sm-0 d-block d-sm-inline-block text-light" onclick="ConfirmDelete();"><i class="fas fa-trash-alt"></i> Delete</a>
+            </td>
+        </tr>
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">
+                <div class="alert alert-dark text-muted text-center">No Station records found yet.</div>
+            </td>
+        </tr>
+    }
+    @if (Model.PageCount > 0)
+    {
+        <tr>
+            <td colspan="8">
+                <div class="float-left">
+                    <nav>
+                        @Html.PagedListPager(Model, page => string.Format("javascript:LoadPage({0})", page),
+                        new PagedListRenderOptions()
+                        {
+                            UlElementClasses = new List<string> { "pagination", "pagination-sm", "mb-3", "mb-sm-0" },
+                            LiElementClasses = new List<string> { "page-item" },
+                            FunctionToTransformEachPageLink = (li, a) =>
+                            {
+                                a.AddCssClass("page-link");
+                                li.InnerHtml = a.ToString();
+                                return li;
+                            }
+                        })
+                    </nav>
+                </div>
+                <div class="float-right">
+                    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+                </div>
+            </td>
+        </tr>
+    }
+</table>
+
+<div class="modal fade" id="divEditStations" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Stations</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Station Name <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateStationName" />
+                    </div>
+                </div>
+                <div class="row row-mb-minus10">
+                    <div class="col-12">
+                        <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="UpdateStation();" id="btnModalConfirmOK">Save</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

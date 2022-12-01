@@ -1,0 +1,1457 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/Images/favicon.ico" />
+    <title>Manage Locations</title>
+    <link href="/Content/Site.css" rel="stylesheet"/>
+
+    <link href="/Content/bootstrap.min.css" rel="stylesheet"/>
+<link href="/Content/fa-svg-with-js.css" rel="stylesheet"/>
+
+    <script src="/Scripts/modernizr-2.6.2.js"></script>
+
+    <script src="/Scripts/fontawesome-all.js"></script>
+
+    
+    <link href="/Content/jquery.minicolors.css" rel="stylesheet"/>
+
+
+</head>
+<body>
+    
+<script>
+    var CurrentUserImagePath = '';
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    
+    <a class="navbar-brand" href="#">Pick To Color</a>
+    <button class="navbar-toggler float-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav  mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href='/Home'><i class='fas fa-home'></i> Home</a>
+            </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="lnkUserManagement" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-users"></i> User Management
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="lnkUserManagement">
+                        <a class="dropdown-item" href="/User">Manage Users</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="lnkMasterDataSetup" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-database"></i>  Master Data Setup
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="lnkMasterDataSetup">
+                        <a class="dropdown-item" href='/Customer'>Customer Registration</a>
+                        <a class="dropdown-item" href='/Station'>Station Registration</a>
+                        <a class="dropdown-item" href='/Location'>Location Registration</a>
+                        <a class="dropdown-item" href='/Boxes'>Box Type Registration</a>
+                        <a class="dropdown-item" href='/ProductRegistration'>Product Registration</a>
+                        
+                    </div>
+                </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="lnkPickToColor" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-hand-rock"></i> Pick To Color
+                </a>
+                <div class="dropdown-menu" aria-labelledby="lnkPickToColor">
+                    <a class="dropdown-item" href='/SingleOrderPicking'>Single Order</a>
+                    <a class="dropdown-item" href="#">Reverse Order</a>
+                </div>
+            </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="lnkReports" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-file-alt"></i> Reports
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="lnkPickToColor">
+                        <a class="dropdown-item" href="#">Pick List Report</a>
+                        <a class="dropdown-item" href="#">Incomplete Order Report</a>
+                        <a class="dropdown-item" href="#">Productivity Report</a>
+                        <a class="dropdown-item" href="#">Average Productivity Per Order Daily Report</a>
+                        <a class="dropdown-item" href="#">Total Productivity Pattern Report</a>
+                        <a class="dropdown-item" href="#">Serial Number Report</a>
+                        <a class="dropdown-item" href="#">Order Cycle Time Report</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href='/Configuration'><i class="fas fa-cogs"></i> Configuration</a>
+                </li>
+        </ul>
+        <ul class="navbar-nav">
+
+            
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="lnkUser" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-2x fa-user-circle"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="lnkPickToColor" id="divUserDropdownMenu">
+                    <a href="#" class="dropdown-item">Welcome sithu</a>
+                        <div class="text-center" id="divUserImage">
+                            <i class="fas fa-user-circle wh-64 text-light"></i>
+                        </div>
+                    <a class="btn btn-sm btn-primary text-light text-center d-block mx-4" onclick="ChangeImage();">Change</a>
+                    <a class="dropdown-item" href="/User/ChangePassword">Change Password</a>
+                    <a class="dropdown-item" href="/Login/LogOff"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="modal fade" id="divImageUpdate" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Add / Change Image</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="divModalImageBody">
+                <div class="row mb-3">
+                    <div class="col-12 text-center">
+                        <i class="fas fa-user-circle fa-8x text-light border wh-200 img-fluid" id="iLayoutUser"></i>
+                        <img class="d-none border px-1 py-1 wh-200" id="imgLayoutUser" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12 text-center">
+                        <a class="btn-primary btn btn-sm text-light" id="btnLayoutSelectUserImage" onclick="SelectImage();">Select Image</a>&nbsp;
+                        <a class="btn-danger btn btn-sm text-light d-none" id="btnLayoutRemoveUserImage" onclick="RemoveSelectedImage('');">Remove</a>
+                        <input type="file" id="fuLayoutUserImage" name="LayoutUserImage" class="d-none" onchange="ImageFileSelected();" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function ChangeImage() {
+        var imgsrc = CurrentUserImagePath;
+        $('#divImageUpdate').modal('show');
+        if (imgsrc != '') {
+            $('#iLayoutUser').hide();
+            $('#imgLayoutUser').attr('src', imgsrc).removeClass('d-none');
+            $('#btnLayoutRemoveUserImage').removeClass('d-none');
+        }
+        else {
+            $('#iLayoutUser').show();
+            $('#imgLayoutUser').attr('src', '').addClass('d-none');
+            $('#btnLayoutRemoveUserImage').addClass('d-none');
+        }
+    }
+
+    function SelectImage() {
+        $('#fuLayoutUserImage').trigger('click');
+    }
+
+    function RemoveSelectedImage() {
+        var ImagePath = CurrentUserImagePath;
+        if (ImagePath != '') {
+            $.ajax({
+                url: '/User/DeleteImage',
+                type: 'POST',
+                data: { 'ImagePath': ImagePath, ForCurrentUser: true },
+                success: function (result) {
+                    $('#iLayoutUser').show();
+                    CurrentUserImagePath = '';
+                    $('#imgLayoutUser').attr('src', '').addClass('d-none');
+                    $('#btnLayoutRemoveUserImage').addClass('d-none');
+                    $('#divUserDropdownMenu #divUserImage').children().remove();
+                    $('#divUserDropdownMenu #divUserImage').append($('<i></i>').addClass('fas fa-user-circle wh-64 text-light'));
+                },
+                error: function (msg) {
+                    $('#iLayoutUser').show();
+                    CurrentUserImagePath = '';
+                    $('#btnLayoutRemoveUserImage').addClass('d-none');
+                }
+            });
+        }
+    }
+
+    function ImageFileSelected() {
+        if ($('#fuLayoutUserImage').val() != '') {
+
+            if (!($('#fuLayoutUserImage').val().endsWith('.png') || $('#fuLayoutUserImage').val().endsWith('.jpg') || $('#fuLayoutUserImage').val().endsWith('.jpeg'))) {
+                $('#divImageUpdate').modal('hide');
+                ShowModalDialog('Please upload .jpg or .png files only.', 'Image Upload failed');
+                return;
+            }
+
+            var myFormData = new FormData();
+            myFormData.append('UserImage', $('#fuLayoutUserImage')[0].files[0]);
+            myFormData.append('ForCurrentUser', true);
+            $.ajax({
+                url: '/User/UploadImage',
+                type: 'POST',
+                processData: false, // important
+                contentType: false, // important
+                dataType: 'json',
+                data: myFormData,
+                success: function (result) {
+                    $('#iLayoutUser').hide();
+                    //Update the new url to the
+                    CurrentUserImagePath = result;
+                    $('#imgLayoutUser').attr('src', result).removeClass('d-none');
+                    $('#btnLayoutRemoveUserImage').removeClass('d-none');
+                    $('#divUserDropdownMenu #divUserImage').children().remove();
+                    $('#divUserDropdownMenu #divUserImage').append($('<img></img>').attr('src', result).addClass('wh-64 px-1 py-1 rounded-circle'));
+                },
+                error: function (msg) {
+                    ShowModalDialog(msg, 'Image Upload failed');
+                }
+
+            });
+        }
+    }
+
+</script>
+
+
+
+    <div class="container body-content">
+        <br />
+        
+
+
+
+
+<style>
+    .count-input {
+        position: relative;
+        width: 100%;
+        max-width: 165px;
+        margin: 10px 0;
+    }
+
+        .count-input input {
+            width: 100%;
+            height: 36.92307692px;
+            border: 1px solid #000;
+            border-radius: 2px;
+            background: none;
+            text-align: center;
+        }
+
+            .count-input input:focus {
+                outline: none;
+            }
+
+        .count-input .incr-btn {
+            display: block;
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            font-size: 26px;
+            font-weight: 300;
+            text-align: center;
+            line-height: 30px;
+            top: 50%;
+            right: 0;
+            margin-top: -15px;
+            text-decoration: none;
+        }
+
+            .count-input .incr-btn:first-child {
+                right: auto;
+                left: 0;
+                top: 46%;
+            }
+
+        .count-input.count-input-sm {
+            max-width: 125px;
+        }
+
+            .count-input.count-input-sm input {
+                height: 36px;
+            }
+
+        .count-input.count-input-lg {
+            max-width: 200px;
+        }
+
+            .count-input.count-input-lg input {
+                height: 70px;
+                border-radius: 3px;
+            }
+</style>
+<h2>Manage Locations</h2>
+<hr />
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">New Location Registration</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divCreateLocations');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+
+    <div class="card-body collapse show" id="divCreateLocations">
+
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Location ID <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="text" id="txtLocationID" class="form-control required" data-message="Location ID is required." maxlength="50" />
+            </div>
+        </div><br />
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Location Code <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="text" id="txtLocationCode" class="form-control required" data-message="Location Code is required." maxlength="10" />
+            </div>
+        </div><br />
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Location Sound File <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="file" name="txtLocationSoundFile" id="txtLocationSoundFile" class="required form-control" data-message="Location Sound File is required.">
+                <input type="hidden" name="LocationSoundFile" id="LocationSoundFile" value="">
+            </div>
+
+        </div><br />
+
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Color Sound File <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="file" name="txtColorSoundFile" id="txtColorSoundFile" class="required form-control" data-message="Color Sound File is required.">
+                <input type="hidden" name="ColorSoundFile" id="ColorSoundFile" value="">
+            </div>
+        </div><br />
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Background Color <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="hidden" id="txtLocationColor" name="BackgroundColorCode" class="form-control" />
+            </div>
+        </div><br />
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Font Color <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="hidden" id="txtColor" name="FontColorCode" class="required form-control" />
+            </div>
+        </div><br />
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Picking Priority <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+
+                <div class="count-input space-bottom">
+                    <a class="incr-btn" data-action="decrease" href="#">–</a>
+
+                    <input name="PickingPriority" id="txtPickingPriority" class="form-control quantity" type="text" value="1" onfocus="CursorBlur()" />
+                    <a class="incr-btn" data-action="increase" href="#">&plus;</a>
+                </div>
+
+            </div>
+        </div><br />
+
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Station <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <select id="ddlBoxes" name="StationID" class="required form-control" data-message="Select a Station ID">
+                    <option value="">Choose Station</option>
+                                <option value='1'>Station C</option>
+                                <option value='2'>Station B</option>
+                                <option value='3'>Station A</option>
+                                <option value='4'>Station E</option>
+                                <option value='5'>Station D</option>
+
+                </select>
+            </div>
+            <div>
+            </div>
+            <div class="col-md-10 col-md-3 col-xs-12">
+                <BR>
+            </div>
+        </div><br />
+
+
+        
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-12 text-center">
+                <button type="button" class="btn btn-primary" onclick="return ValidatePage();">
+                    <i class="fas fa-plus-square"></i>&nbsp;Create
+                </button>
+            </div>
+        </div>
+        <div class="row row-mb-minus10">
+            <div class="col-12">
+                <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<br />
+
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">Select Locations to Edit</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divSelectLocations');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divSelectLocations">
+        <div class="table-responsive" id="tblLocations">
+
+<table class="table table-bordered" id="tblLocations">
+    <tr class="thead-dark text-light text-center">
+        <th class="text-center"><input type="checkbox" id="chkHeader" class="wh-20" onclick="ToggleCheckBoxes(this);" /></th>
+        <th>
+            Location ID
+        </th>
+        <th>
+            Location Code
+        </th>
+        <th>
+            Location Sound File
+        </th>        
+        <th>
+            Color Sound File
+        </th>
+        <th>
+            Background Color
+        </th>
+        <th>
+            Font Color
+        </th>
+        <th>
+            Picking Priority
+        </th>
+        <th>
+            Station
+        </th>
+        <th>
+            Active Since
+        </th>
+        <th>
+            Actions
+        </th>
+    </tr>
+
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='23' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                test
+            </td>
+            <td>
+                test
+            </td>
+            <td>
+                GREEN.wav
+            </td>
+            <td>
+                RED_2.wav
+            </td>
+            <td style="background-color:
+                #1f7ddb">
+            </td>
+            <td style="background-color:
+                #4717a6">
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+
+                
+               
+                Station C
+            </td>
+            <td>
+                4/24/2018 10:53:13 AM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(23,'test','test','GREEN.wav','RED_2.wav','#1f7ddb','#4717a6',2,1)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='22' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                abbb
+            </td>
+            <td>
+                aaaa
+            </td>
+            <td>
+                GOLD.wav
+            </td>
+            <td>
+                BLACK.wav
+            </td>
+            <td style="background-color:
+                #216b1c">
+            </td>
+            <td style="background-color:
+                #db46bd">
+            </td>
+            <td>
+                8
+            </td>
+            <td>
+
+                
+               
+                Station C
+            </td>
+            <td>
+                4/24/2018 9:54:04 AM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(22,'abbb','aaaa','GOLD.wav','BLACK.wav','#216b1c','#db46bd',8,1)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='18' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                1234
+            </td>
+            <td>
+                4569
+            </td>
+            <td>
+                ORANGE_9.wav
+            </td>
+            <td>
+                C_5.wav
+            </td>
+            <td style="background-color:
+                #bd4e8f">
+            </td>
+            <td style="background-color:
+                #174d82">
+            </td>
+            <td>
+                4
+            </td>
+            <td>
+
+                
+               
+                Station B
+            </td>
+            <td>
+                3/29/2018 3:53:49 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(18,'1234','4569','ORANGE_9.wav','C_5.wav','#bd4e8f','#174d82',4,2)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='17' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                4444
+            </td>
+            <td>
+                55555
+            </td>
+            <td>
+                END_6.wav
+            </td>
+            <td>
+                PURPLE_3.wav
+            </td>
+            <td style="background-color:
+                #365475">
+            </td>
+            <td style="background-color:
+                #f0095a">
+            </td>
+            <td>
+                3
+            </td>
+            <td>
+
+                
+               
+                Station D
+            </td>
+            <td>
+                3/29/2018 3:51:26 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(17,'4444','55555','END_6.wav','PURPLE_3.wav','#365475','#f0095a',3,5)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='16' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                333
+            </td>
+            <td>
+                54555
+            </td>
+            <td>
+                END_5.wav
+            </td>
+            <td>
+                PURPLE_2.wav
+            </td>
+            <td style="background-color:
+                #3f9af5">
+            </td>
+            <td style="background-color:
+                #eaecee">
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+
+                
+               
+                Station C
+            </td>
+            <td>
+                3/29/2018 3:48:55 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(16,'333','54555','END_5.wav','PURPLE_2.wav','#3f9af5','#eaecee',2,1)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='15' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                987
+            </td>
+            <td>
+                000
+            </td>
+            <td>
+                B_1.wav
+            </td>
+            <td>
+                GOLD_4.wav
+            </td>
+            <td style="background-color:
+                #eaecee">
+            </td>
+            <td style="background-color:
+                #cee1f5">
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+
+                
+               
+                Station C
+            </td>
+            <td>
+                3/29/2018 3:47:02 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(15,'987','000','B_1.wav','GOLD_4.wav','#eaecee','#cee1f5',2,1)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='14' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                6789
+            </td>
+            <td>
+                0987
+            </td>
+            <td>
+                Error_7.wav
+            </td>
+            <td>
+                PINK_2.wav
+            </td>
+            <td style="background-color:
+                #eaecee">
+            </td>
+            <td style="background-color:
+                #8097ad">
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+
+                
+               
+                Station B
+            </td>
+            <td>
+                3/29/2018 3:44:45 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(14,'6789','0987','Error_7.wav','PINK_2.wav','#eaecee','#8097ad',2,2)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='13' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                123
+            </td>
+            <td>
+                456
+            </td>
+            <td>
+                Error_6.wav
+            </td>
+            <td>
+                ORANGE_8.wav
+            </td>
+            <td style="background-color:
+                #52a1f0">
+            </td>
+            <td style="background-color:
+                #1b3854">
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+
+                
+               
+                Station A
+            </td>
+            <td>
+                3/29/2018 11:54:44 AM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(13,'123','456','Error_6.wav','ORANGE_8.wav','#52a1f0','#1b3854',2,3)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='11' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+                111
+            </td>
+            <td>
+                RED.wav
+            </td>
+            <td>
+                ORANGE_4.wav
+            </td>
+            <td style="background-color:
+                #2080e6">
+            </td>
+            <td style="background-color:
+                #db1883">
+            </td>
+            <td>
+                11
+            </td>
+            <td>
+
+                
+               
+                Station E
+            </td>
+            <td>
+                3/28/2018 4:13:33 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(11,'2','111','RED.wav','ORANGE_4.wav','#2080e6','#db1883',11,4)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td class="text-center"><input type="checkbox" id="chkHeader" class="child-item wh-20" data-id='10' onclick="ToggleHeaderCheckBox(this);" />
+            </td>
+            <td>
+                sithu
+            </td>
+            <td>
+                sithu
+            </td>
+            <td>
+                Error_2.wav
+            </td>
+            <td>
+                C_3.wav
+            </td>
+            <td style="background-color:
+                #4389cf">
+            </td>
+            <td style="background-color:
+                #2e8010">
+            </td>
+            <td>
+                3
+            </td>
+            <td>
+
+                
+               
+                Station B
+            </td>
+            <td>
+                3/28/2018 12:14:26 PM
+            </td>
+            <td class="text-center">
+                <a class="btn btn-sm btn-primary text-light mb-3 mb-sm-0" onclick="OnEdit(10,'sithu','sithu','Error_2.wav','C_3.wav','#4389cf','#2e8010',3,2)">
+                    <i class="fas fa-pencil-alt"></i> Edit
+                </a>
+                
+                
+
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="11">
+                <div class="float-left">
+                    <nav>
+                        <div class="pagination-container"><ul class="mb-sm-0 mb-3 pagination-sm pagination"><li class="page-item active"><a class="page-link">1</a></li><li class="page-item"><a class="page-link" href="javascript:LoadPage(2)">2</a></li><li class="page-item PagedList-skipToNext"><a class="page-link" href="javascript:LoadPage(2)" rel="next">»</a></li></ul></div>
+                    </nav>
+                </div>
+                <div class="float-right">
+                    Page 1 of 2
+                </div>
+            </td>
+        </tr>
+</table>
+<div class="modal fade" id="divEditLocation" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Location details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Location ID</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateLocationID" />
+                        <input type="hidden" class="form-control" id="txtUpdateLocationMasterID" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Location Code</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="txtUpdateLocationCode" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Location Sound File</label>
+                    <div class="col-sm-8">                       
+                        <label type="text" id="lblUpdateLocationSoundFile"></label>
+                        <input type="file" name="txtUpdateLocationSoundFile" id="txtUpdateLocationSoundFile" class="form-control" onclick="this.value = null">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Color Sound File</label>
+                    <div class="col-sm-8">                       
+                        <label type="text" id="lblUpdateColorSoundFile"></label>
+                        <input type="file" name="txtUpdateColorSoundFile" id="txtUpdateColorSoundFile" class="form-control" onclick="this.value = null">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Background Color</label>
+                    <div class="col-sm-8">
+                        <input type="hidden" id="txtUpdateBackgroundColorCode" class="form-control"/>
+                    </div>
+          
+                    
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Font Color</label>
+                    <div class="col-sm-8">                       
+                        <input type="hidden" id="txtUpdateFontColorCode" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Picking Priority</label>
+                    <div class="col-sm-8">
+                        <input type="text" id="txtUpdatePickingPriority" name="txtUpdatePickingPriority" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label">Station</label>
+                    <div class="col-sm-8">
+                       
+                        <select id="ddlUpdateStationID" name="ddlUpdateStationID" class="form-control">
+                            <option value="">Choose Station</option>
+                                        <option value='1'>Station C</option>
+                                        <option value='2'>Station B</option>
+                                        <option value='3'>Station A</option>
+                                        <option value='4'>Station E</option>
+                                        <option value='5'>Station D</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnModalConfirmOK" onclick="UpdateLocation();">Ok</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function LoadPage(pagenumber) {
+            ShowLoading();
+            //PageNumber = pagenumber;
+            $('#tblLocations').load('/Location/GetAllLocations', { pageno: pagenumber }, function () {
+                HideLoading();
+            });
+        }
+    </script>
+    
+        </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <a class="btn btn-danger mt-3 mt-sm-0 d-block d-sm-inline-block text-light" onclick="ConfirmDelete();"><i class="fas fa-trash-alt"></i> Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <hr />
+        <footer class="text-center">
+            <p>&copy; 2018 - Pick To Color System - Bollore Logistics</p>
+        </footer>
+        <!-- Success Popup -->
+<div class="modal fade" id="divMessage" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle"><label id="lblModalMessageTitle" /></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="divModalMessageBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+        <div class="loading-container d-none">
+    <div class="row text-center">
+        <div class="col-12">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p class="display-4">Loading...</p>
+        </div>
+    </div>
+</div>
+    </div>
+    
+    <script>
+        if (!String.prototype.endsWith) {
+            String.prototype.endsWith = function (searchString, position) {
+                var subjectString = this.toString();
+                if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                    position = subjectString.length;
+                }
+                position -= searchString.length;
+                var lastIndex = subjectString.indexOf(searchString, position);
+                return lastIndex !== -1 && lastIndex === position;
+            };
+        }
+    </script>
+    <script src="/Scripts/jquery-3.3.1.min.js"></script>
+<script src="/Scripts/popper.min.js"></script>
+<script src="/Scripts/bootstrap.min.js"></script>
+<script src="/Scripts/CommonUtil.js"></script>
+
+    <script src="/Scripts/bootbox.min.js"></script>
+
+    
+    <script src="/Scripts/jquery.minicolors.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+
+            $('ul.navbar-nav a[href!="#"]').each(function () {
+                if (location.href.endsWith($(this).attr('href'))) {
+                    $(this).parents('li').children('a.nav-link').addClass('active');
+                }
+            });
+            $('nav.navbar').find('a.nav-link,a.dropdown-item').not('.nav-link.dropdown-toggle').not('[href!="#"]').click(function (e) {
+                ShowLoading();
+            });
+        });
+    </script>
+    
+    <script>
+        $.minicolors = {
+            defaults: {
+                animationSpeed: 50,
+                animationEasing: 'swing',
+                change: null,
+                changeDelay: 0,
+                control: 'hue',
+                defaultValue: '#EAECEE', //orange color default
+                format: 'hex',
+                hide: null,
+                hideSpeed: 100,
+                inline: false,
+                keywords: '',
+                letterCase: 'lowercase',
+                opacity: false,
+                position: 'bottom left',
+                show: null,
+                showSpeed: 100,
+                theme: 'default',
+                swatches: []
+            }
+        };
+
+
+        $(document).ready(function () {
+            $('#txtColor').minicolors();
+            $('#txtLocationColor').minicolors();
+            $('#txtUpdateBackgroundColorCode').minicolors();
+            $('#txtUpdateFontColorCode').minicolors();
+        });
+
+
+        $(".incr-btn").on("click", function (e) {
+            var $button = $(this);
+            var oldValue = $button.parent().find('.quantity').val();
+            $button.parent().find('.incr-btn[data-action="decrease"]').removeClass('inactive');
+            if ($button.data('action') == "increase") {
+                var newVal = parseFloat(oldValue) + 1;
+            } else {
+                // Don't allow decrementing below 1
+                if (oldValue > 1) {
+                    var newVal = parseFloat(oldValue) - 1;
+                } else {
+                    newVal = 1;
+                    $button.addClass('inactive');
+                }
+            }
+            $button.parent().find('.quantity').val(newVal);
+            e.preventDefault();
+        });
+
+        function ValidatePage() {
+
+            if (ValidateRequired()) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/Location/Create',
+                    data: { NewLocation: { LocationID: $('#txtLocationID').val(), LocationCode: $('#txtLocationCode').val(), LocationSoundFile: $('#LocationSoundFile').val(), ColorSoundFile: $('#ColorSoundFile').val(), BackgroundColorCode: $('#txtLocationColor').val(), FontColorCode: $('#txtColor').val(), PickingPriority: $('#txtPickingPriority').val(), stationid: $('#ddlBoxes').val() } },
+                    success: function (result) {
+                        //$('#StationName').val('');
+                        ShowModalDialog('Location is added successfully!', 'Successful Creation');
+                        $('#txtLocationID').val('');
+                        $('#txtLocationCode').val('');
+                        $('#LocationSoundFile').val('');
+                        $('#txtLocationSoundFile').val('');
+                        $('#ColorSoundFile').val('');
+                        $('#txtColorSoundFile').val('');
+                        $('#txtPickingPriority').val('1')
+                        $('#ddlBoxes').prop('selectedIndex', 0);                     
+                      
+                        $('#txtColor').minicolors('value', { color: '#EAECEE' });
+                        $('#txtLocationColor').minicolors('value', { color: '#EAECEE' });
+                        $('#tblLocations').load('/Location/GetAllLocations', function () {
+                            $('#txtUpdateBackgroundColorCode').minicolors();
+                            $('#txtUpdateFontColorCode').minicolors();
+                        });
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        ShowModalDialog(xhr.responseText, 'Creation failed');
+                    }
+                });
+            }
+
+        }
+
+        function ConfirmDelete(locationMasterID) {
+            if ($('#tblLocations').find('tr:not(:has(th)) td :checkbox.child-item:checked').length == 0) {
+                ShowModalDialog('Please select a location to delete', 'Information');
+                return;
+            }
+
+            var ItemsToDelete = new Array();
+            $('#tblLocations').find('tr:not(:has(th)) td :checkbox.child-item:checked').each(function () {
+                ItemsToDelete.push($(this).data('id'));
+            });
+
+            bootbox.confirm("Are you sure want to delete the selected Location?",
+              function (result) {
+                  if (result) {
+                      $.ajax({
+                          url: '/Location/Delete',
+                          type: 'POST',
+                          data: { LocationMasterIDs: ItemsToDelete },
+                          success: function (result) {
+                              $('#tblLocations').load('/Location/GetAllLocations', { pageno: 1 }, function () {
+                                  
+                                  $('#txtUpdateBackgroundColorCode').minicolors();
+                                  $('#txtUpdateFontColorCode').minicolors();
+                              });
+                              ShowModalDialog('The selected Location is removed successfully', 'Successful Delete');
+                          },
+                          error: function () {
+                              ShowModalDialog('The delete operation has failed. Please try again later after some time.', 'Delete failed!');
+                          }
+                      });
+                  }
+              });
+        }
+
+        function OnEdit(locationMasterID, locationID, locationCode, locationSoundFile, colorSoundFile, backgroundColorCode, fontColorCode, pickingPriority, stationID) {
+
+            $('#divEditLocation').modal('show');
+            ClearUpdateForm();
+            $('#txtUpdateLocationMasterID').val(locationMasterID);
+            $('#txtUpdateLocationID').val(locationID);
+            $('#txtUpdateLocationCode').val(locationCode);
+            $('#lblUpdateLocationSoundFile').html(locationSoundFile);
+            $('#lblUpdateColorSoundFile').html(colorSoundFile);
+            $('#txtUpdateBackgroundColorCode').minicolors('value', { color: backgroundColorCode });
+            $('#txtUpdateFontColorCode').minicolors('value', { color: fontColorCode });
+            $('#txtUpdatePickingPriority').val(pickingPriority);
+            $('#ddlUpdateStationID').val(stationID);
+
+        }
+        function UpdateLocation() {
+            var IsUpdateValid = true;
+            if ($.trim($('#txtUpdateLocationID').val()) == '') {
+                ShowError($('#txtUpdateLocationID'), 'Please enter the Location ID');
+                IsUpdateValid = false;
+            }
+            if ($.trim($('#txtUpdateLocationCode').val()) == '') {
+                ShowError($('#txtUpdateLocationCode'), 'Please enter the Location Code');
+                IsUpdateValid = false;
+            }
+            //if ($.trim($('#txtUpdateLocationSoundFile').val()) == '') {
+            //    ShowError($('#txtUpdateLocationSoundFile'), 'Please enter the Location Sound File');
+            //    IsUpdateValid = false;
+            //}
+            if ($.trim($('#txtUpdatePickingPriority').val()) == '') {
+                ShowError($('#txtUpdatePickingPriority'), 'Please enter the Picking Priority');
+                IsUpdateValid = false;
+            }
+            if (!(Math.floor($.trim($('#txtUpdatePickingPriority').val())) == $.trim($('#txtUpdatePickingPriority').val()) && $.isNumeric($.trim($('#txtUpdatePickingPriority').val())))) {
+
+                ShowError($('#txtUpdatePickingPriority'), 'Picking Priority must be integer value');
+                IsUpdateValid = false;
+            }
+            //if ($.trim($('#txtUpdateColorSoundFile').val()) == '') {
+            //    ShowError($('#txtUpdateColorSoundFile'), 'Please enter the Color Sound File');
+            //    IsUpdateValid = false;
+            //}
+
+            if (!IsUpdateValid) return false;
+
+            $.ajax({
+                url: '/Location/Edit',
+                type: 'POST',
+                data: { LocationMasterID: $.trim($('#txtUpdateLocationMasterID').val()), LocationID: $.trim($('#txtUpdateLocationID').val()), LocationCode: $.trim($('#txtUpdateLocationCode').val()), LocationSoundFile: $.trim($('#lblUpdateLocationSoundFile').html()), ColorSoundFile: $.trim($('#lblUpdateColorSoundFile').html()), BackgroundColorCode: $.trim($('#txtUpdateBackgroundColorCode').val()), FontColorCode: $.trim($('#txtUpdateFontColorCode').val()), PickingPriority: $.trim($('#txtUpdatePickingPriority').val()), stationid: $.trim($('#ddlUpdateStationID').val()) },
+                success: function (result) {
+                    $('#tblLocations').load('/Location/GetAllLocations', function () {
+                        $('#txtUpdateBackgroundColorCode').minicolors();
+                        $('#txtUpdateFontColorCode').minicolors();
+                    });
+                    ShowModalDialog('The Location account is updated successfully', 'Successful Update');
+                },
+                error: function () {
+
+                    ShowModalDialog('The Location detail update has failed. Please try again later after some time.', 'Location details update failed!');
+                }
+            });
+            $('#divEditLocation').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+        }
+
+
+        function CursorBlur() {
+            $("#txtPickingPriority").blur();
+        }
+
+        function ClearUpdateForm() {
+            $('#txtUpdateLocationID').val('');
+            $('#txtUpdateLocationCode').val('');
+            $('#lblUpdateLocationSoundFile').val('');
+            $('#lblUpdateColorSoundFile').val('');
+            //$('#txtUpdateBackgroundColorCode').minicolors('value', { color: '#EAECEE' });
+            //$('#txtUpdateFontColorCode').minicolors('value', { color: '#EAECEE' });
+            $('#txtUpdatePickingPriority').val('');
+            $('#ddlUpdateStationID').val('0');
+        }
+
+        $('#txtLocationSoundFile').on('change', function (e) {
+            var files = e.target.files;
+            //var myID = 3; //uncomment this to make sure the ajax URL works
+            if (files.length > 0) {
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+                    for (var x = 0; x < files.length; x++) {
+                        data.append("file" + x, files[x]);
+                    }
+
+                    $.ajax({
+                        type: "POST",
+                        url: '/Location/SoundFileUpload',
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#tblLocations').load('/Location/GetAllLocations', function () {
+                                $('#txtUpdateBackgroundColorCode').minicolors();
+                                $('#txtUpdateFontColorCode').minicolors();
+                            });
+
+                            if (result == 'File Upload failed. Please try again!') {
+                                $('#txtLocationSoundFile').val('');
+                                $('#LocationSoundFile').val('');
+                                ShowModalDialog(result, 'Upload Failed');
+                            }
+                            else {
+                                $('#LocationSoundFile').val(result);
+                                ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            var err = "Error " + " " + status + " " + p3 + " " + p4;
+                            if (xhr.responseText && xhr.responseText[0] == "{")
+                                err = JSON.parse(xhr.responseText).Message;
+                            //ShowModalDialog(err, 'Successful Update');
+                        }
+                    });
+                } else {
+                    alert("This browser doesn't support HTML5 file uploads!");
+                }
+            }
+        });
+
+        $('#txtColorSoundFile').on('change', function (e) {
+            var files = e.target.files;
+            //var myID = 3; //uncomment this to make sure the ajax URL works
+            if (files.length > 0) {
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+                    for (var x = 0; x < files.length; x++) {
+                        data.append("file" + x, files[x]);
+                    }
+
+                    $.ajax({
+                        type: "POST",
+                        url: '/Location/SoundFileUpload',
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#tblLocations').load('/Location/GetAllLocations', function () {
+                                $('#txtUpdateBackgroundColorCode').minicolors();
+                                $('#txtUpdateFontColorCode').minicolors();
+                            });
+
+                            if (result == 'File Upload failed. Please try again!') {
+                                $('#txtColorSoundFile').val('');
+                                $('#ColorSoundFile').val('');
+                                ShowModalDialog(result, 'Upload Failed');
+                            }
+                            else {
+                                $('#ColorSoundFile').val(result);
+                                ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            var err = "Error " + " " + status + " " + p3 + " " + p4;
+                            if (xhr.responseText && xhr.responseText[0] == "{")
+                                err = JSON.parse(xhr.responseText).Message;
+                            //ShowModalDialog(err, 'Successful Update');
+                        }
+                    });
+                } else {
+                    alert("This browser doesn't support HTML5 file uploads!");
+                }
+            }
+        });
+
+        $('#txtUpdateColorSoundFile').on('change', function (e) {
+            var files = e.target.files;
+            //var myID = 3; //uncomment this to make sure the ajax URL works
+            if (files.length > 0) {
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+                    for (var x = 0; x < files.length; x++) {
+                        data.append("file" + x, files[x]);
+                    }
+
+                    $.ajax({
+                        type: "POST",
+                        url: '/Location/SoundFileUpload',
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            
+
+                            if (result == 'File Upload failed. Please try again!') {
+                                $('#txtUpdateColorSoundFile').val('');
+                                ShowModalDialog(result, 'Upload Failed');
+                            }
+                            else {
+                                $('#lblUpdateColorSoundFile').html(result);
+                                ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            var err = "Error " + " " + status + " " + p3 + " " + p4;
+                            if (xhr.responseText && xhr.responseText[0] == "{")
+                                err = JSON.parse(xhr.responseText).Message;
+                            //ShowModalDialog(err, 'Successful Update');
+                        }
+                    });
+                } else {
+                    alert("This browser doesn't support HTML5 file uploads!");
+                }
+            }
+        });
+
+        $('#txtUpdateLocationSoundFile').on('change', function (e) {
+            var files = e.target.files;
+            //var myID = 3; //uncomment this to make sure the ajax URL works
+            if (files.length > 0) {
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+                    for (var x = 0; x < files.length; x++) {
+                        data.append("file" + x, files[x]);
+                    }
+
+                    $.ajax({
+                        type: "POST",
+                        url: '/Location/SoundFileUpload',
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            
+
+                            if (result == 'File Upload failed. Please try again!') {
+                                $('#txtUpdateLocationSoundFile').val('');
+                                ShowModalDialog(result, 'Upload Failed');
+                            }
+                            else {
+                                $('#lblUpdateLocationSoundFile').html(result);
+                                ShowModalDialog('This sound file is uploaded successfully', 'Upload Successful');
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            var err = "Error " + " " + status + " " + p3 + " " + p4;
+                            if (xhr.responseText && xhr.responseText[0] == "{")
+                                err = JSON.parse(xhr.responseText).Message;
+                            //ShowModalDialog(err, 'Successful Update');
+                        }
+                    });
+                } else {
+                    alert("This browser doesn't support HTML5 file uploads!");
+                }
+            }
+        });
+
+        
+    </script>
+
+
+
+<!-- Visual Studio Browser Link -->
+<script type="application/json" id="__browserLink_initializationData">
+    {"appName":"Chrome","requestId":"e37b99e50bc5476182fd64a71db1e923"}
+</script>
+<script type="text/javascript" src="http://localhost:59100/42fbb10ecc294b67a967f1a0570aa476/browserLink" async="async"></script>
+<!-- End Browser Link -->
+
+</body>
+</html>

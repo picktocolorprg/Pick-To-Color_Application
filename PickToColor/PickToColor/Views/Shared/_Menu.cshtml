@@ -1,0 +1,218 @@
+﻿@using PickToColor.Models;
+@{
+    UserModel CurrentUser = null;
+    bool IsManager = false;
+
+    if (Session[PickToColor.Utility.KeyConstants.CurrentUser] == null && Context.User != null && Context.User.Identity != null && Context.User.Identity.IsAuthenticated)
+    {
+        Response.Redirect("~/Login/Index");
+        return;
+        
+    }
+    CurrentUser = Session[PickToColor.Utility.KeyConstants.CurrentUser] as UserModel;
+    if (CurrentUser != null) { IsManager = CurrentUser.IsManager; }
+
+}
+<script>
+    var CurrentUserImagePath = '@Href("~" + CurrentUser.ImagePath)';
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href='@Url.Action("Index","Home")'>Pick To Color</a>
+    <button class="navbar-toggler float-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav  mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href='@Url.Action("Index","Home")'><i class='fas fa-home'></i> Home</a>
+            </li>
+            @if (IsManager)
+            {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="lnkUserManagement" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-users"></i> User Management
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="lnkUserManagement">
+                        @Html.ActionLink("Manage Users", "Index", "User", null, new { @class = "dropdown-item" })
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="lnkMasterDataSetup" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-database"></i>  Master Data Setup
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="lnkMasterDataSetup">
+                        <a class="dropdown-item" href='@Url.Action("Index","Customer")'>Customer Registration</a>
+                        <a class="dropdown-item" href='@Url.Action("Index","Station")'>Station Registration</a>
+                        <a class="dropdown-item" href='@Url.Action("Index","Location")'>Location Registration</a>
+                        <a class="dropdown-item" href='@Url.Action("Index","Boxes")'>Box Type Registration</a>
+                        <a class="dropdown-item" href='@Url.Action("Index","ProductRegistration")'>Product Registration</a>
+                    </div>
+                </li>
+            }
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="lnkPickToColor" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-box"></i> Pick To Color
+                </a>
+                <div class="dropdown-menu" aria-labelledby="lnkPickToColor">
+                    <a class="dropdown-item" href='@Url.Action("Index","SingleOrderPicking")'>Order Picking</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="navbar-nav">
+            @{
+                if (Session[PickToColor.Utility.KeyConstants.CurrentStation] != null)
+                {
+                    StationModel CurrentStation = Session[PickToColor.Utility.KeyConstants.CurrentStation] as StationModel;
+                    if (CurrentStation != null)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href='@Url.Action("SelectStation","Station")'>
+                                @CurrentStation.StationName
+                            </a>
+                        </li>
+                    }
+                }
+            }
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="lnkUser" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-2x fa-user-circle"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="lnkPickToColor" id="divUserDropdownMenu">
+                    <a href="#" class="dropdown-item">Welcome @CurrentUser.UserName</a>
+                    @if (!string.IsNullOrEmpty(CurrentUser.ImagePath))
+                    {
+                        <div class="text-center" id="divUserImage">
+                            <img src='@Href("~"+ CurrentUser.ImagePath)' class="wh-64 px-1 py-1 rounded-circle">
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center" id="divUserImage">
+                            <i class="fas fa-user-circle wh-64 text-light"></i>
+                        </div>
+
+                    }
+                    <a class="btn btn-sm btn-primary text-light text-center d-block mx-4" onclick="ChangeImage();">Change</a>
+                    @Html.ActionLink("Change Password", "ChangePassword", "User", null, new { @class = "dropdown-item" })
+                    @Html.ActionLink("Set/Change Station", "SelectStation", "Station", null, new { @class = "dropdown-item" })
+                    <a class="dropdown-item" href="@Url.Action("LogOff","Login")"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="modal fade" id="divImageUpdate" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Add / Change Image</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="divModalImageBody">
+                <div class="row mb-3">
+                    <div class="col-12 text-center">
+                        <i class="fas fa-user-circle fa-8x text-light border wh-200 img-fluid" id="iLayoutUser"></i>
+                        <img class="d-none border px-1 py-1 wh-200" id="imgLayoutUser" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12 text-center">
+                        <a class="btn-primary btn btn-sm text-light" id="btnLayoutSelectUserImage" onclick="SelectImage();">Select Image</a>&nbsp;
+                        <a class="btn-danger btn btn-sm text-light d-none" id="btnLayoutRemoveUserImage" onclick="RemoveSelectedImage('@Href("~"+CurrentUser.ImagePath)');">Remove</a>
+                        <input type="file" id="fuLayoutUserImage" name="LayoutUserImage" class="d-none" onchange="ImageFileSelected();" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function ChangeImage() {
+        var imgsrc = CurrentUserImagePath;
+        $('#divImageUpdate').modal('show');
+        if (imgsrc != '') {
+            $('#iLayoutUser').hide();
+            $('#imgLayoutUser').attr('src', imgsrc).removeClass('d-none');
+            $('#btnLayoutRemoveUserImage').removeClass('d-none');
+        }
+        else {
+            $('#iLayoutUser').show();
+            $('#imgLayoutUser').attr('src', '').addClass('d-none');
+            $('#btnLayoutRemoveUserImage').addClass('d-none');
+        }
+    }
+
+    function SelectImage() {
+        $('#fuLayoutUserImage').trigger('click');
+    }
+
+    function RemoveSelectedImage() {
+        var ImagePath = CurrentUserImagePath;
+        if (ImagePath != '') {
+            $.ajax({
+                url: '@Url.Action("DeleteImage", "User")',
+                type: 'POST',
+                data: { 'ImagePath': ImagePath, ForCurrentUser: true },
+                success: function (result) {
+                    $('#iLayoutUser').show();
+                    CurrentUserImagePath = '';
+                    $('#imgLayoutUser').attr('src', '').addClass('d-none');
+                    $('#btnLayoutRemoveUserImage').addClass('d-none');
+                    $('#divUserDropdownMenu #divUserImage').children().remove();
+                    $('#divUserDropdownMenu #divUserImage').append($('<i></i>').addClass('fas fa-user-circle wh-64 text-light'));
+                },
+                error: function (msg) {
+                    $('#iLayoutUser').show();
+                    CurrentUserImagePath = '';
+                    $('#btnLayoutRemoveUserImage').addClass('d-none');
+                }
+            });
+        }
+    }
+
+    function ImageFileSelected() {
+        if ($('#fuLayoutUserImage').val() != '') {
+
+            if (!($('#fuLayoutUserImage').val().endsWith('.png') || $('#fuLayoutUserImage').val().endsWith('.jpg') || $('#fuLayoutUserImage').val().endsWith('.jpeg'))) {
+                $('#divImageUpdate').modal('hide');
+                ShowModalDialog('Please upload .jpg or .png files only.', 'Image Upload failed');
+                return;
+            }
+
+            var myFormData = new FormData();
+            myFormData.append('UserImage', $('#fuLayoutUserImage')[0].files[0]);
+            myFormData.append('ForCurrentUser', true);
+            $.ajax({
+                url: '@Url.Action("UploadImage", "User")',
+                type: 'POST',
+                processData: false, // important
+                contentType: false, // important
+                dataType: 'json',
+                data: myFormData,
+                success: function (result) {
+                    $('#iLayoutUser').hide();
+                    //Update the new url to the
+                    CurrentUserImagePath = result;
+                    $('#imgLayoutUser').attr('src', result).removeClass('d-none');
+                    $('#btnLayoutRemoveUserImage').removeClass('d-none');
+                    $('#divUserDropdownMenu #divUserImage').children().remove();
+                    $('#divUserDropdownMenu #divUserImage').append($('<img></img>').attr('src', result).addClass('wh-64 px-1 py-1 rounded-circle'));
+                },
+                error: function (msg) {
+                    ShowModalDialog(msg, 'Image Upload failed');
+                }
+
+            });
+        }
+    }
+
+</script>
+
+

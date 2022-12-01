@@ -1,0 +1,94 @@
+﻿@using PickToColor.Utility;
+
+@{
+    ViewBag.Title = "Manage Customers | Pick To Color System | Central Logistics Pte. Ltd.";
+}
+
+<h2>Manage Customers</h2>
+<hr />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">New Customer Registration</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divCreateCustomers');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divCreateCustomers">
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Customer Code <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="text" id="txtCustomerCode" class="form-control required" data-message="Customer Code is required." maxlength="20" />
+            </div>
+        </div><br />
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Customer Name <sup><i class="fas fa-asterisk fa-1x text-danger"></i></sup></span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <input type="text" class="form-control required" data-message="Customer Name is required." maxlength="50" id="txtCustomerName" />
+            </div>
+        </div><br />
+        <div class="row">
+            <div class="col-md-3 col-xs-12">
+                <span class="control-label col-md-2">Description</span>
+            </div>
+            <div class="col-md-9 col-xs-12">
+                <textarea id="txtDescription" class="form-control" maxlength="200"></textarea>
+            </div>
+        </div><br />
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-12 text-center">
+                <button type="button" class="btn btn-primary" onclick="return ValidatePage();">
+                    <i class="fas fa-plus-square"></i>&nbsp;Add
+                </button>
+            </div>
+        </div>
+        <div class="row row-mb-minus10">
+            <div class="col-12">
+                <sup><i class="fas fa-asterisk fa-1x text-danger"></i>-Field(s) required</sup>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="card">
+    <div class="card-header">
+        <h4 class="d-inline-block">Select Customers to Edit</h4>
+        <a class="btn btn-light text-dark float-right border" title="Collapse Panel" onclick="ToggleCards(this, '#divSelectCustomers');"><i class="fas fa-chevron-up"></i></a>
+    </div>
+    <div class="card-body collapse show" id="divSelectCustomers">
+        <div class="table-responsive" id="tblCustomers">
+            @{
+                Html.RenderAction("GetAllCustomers", "Customer");
+            }
+        </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <a class="btn btn-danger mt-3 mt-sm-0 d-block d-sm-inline-block text-light" onclick="ConfirmDelete();"><i class="fas fa-trash-alt"></i> Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function ValidatePage() {
+        if (ValidateRequired()) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Create","Customer")',
+                data: { NewCustomer: { CustomerCode: $('#txtCustomerCode').val(), CustomerName: $('#txtCustomerName').val(), Description: $('#txtDescription').val() } },
+                success: function (result) {
+                    $('#StationName').val('');
+                    ShowModalDialog('Customer is added successfully!', 'Successful Creation');
+                    $('#txtCustomerCode').val('');
+                    $('#txtCustomerName').val('');
+                    $('#txtDescription').val('');
+                    $('#tblCustomers').load('@Url.Action("GetAllCustomers", "Customer")');
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    ShowModalDialog(xhr.responseText, 'Creation failed');
+                }
+            });
+        }
+
+    }
+</script>
