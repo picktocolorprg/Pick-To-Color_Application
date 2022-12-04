@@ -1,4 +1,4 @@
-# 2. Pick-To-Color_Database
+# 1. Pick-To-Color_Database
 ===============================
 ==============================
 Pick To Color Database Script v1.0
@@ -7,7 +7,7 @@ The database script will create Pick To Color database in your MS SQL database.
 Open `DBScript.sql` file with MS SQL server and run this script.
 
 
-# 1. Pick-To-Color_WebApplication
+# 2. Pick-To-Color_WebApplication
 ===============================
 ==============================
 Pick To Color v1.0
@@ -40,7 +40,7 @@ Default user credential for PTC web application.
 `user name: admin`
 `password: admin`
 
-# 2. Pick-To-Color_WindowService
+# 3. Pick-To-Color_WindowService
 ===============================
 ==============================
 Pick To Color Window Service v1.0
